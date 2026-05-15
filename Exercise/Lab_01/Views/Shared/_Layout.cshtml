@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StyleHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { font-family: 'Inter', sans-serif !important; }
+    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navbar navbar-expand-md">
+            <div class="container-fluid page-shell">
+                <a class="navbar-brand brand-mark" asp-controller="Home" asp-action="Index">StyleHub</a>
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav main-menu mx-auto">
+                        <li class="nav-item"><a class="nav-link active" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#products">Sản phẩm</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#blog">Blog</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main role="main">@RenderBody()</main>
+</body>
+</html>

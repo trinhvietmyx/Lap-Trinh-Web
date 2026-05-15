@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+    var products = new[] {
+        new { Name = "Váy Quây dài", Price = "600,000đ", OldPrice = "800,000đ", Sale = "-25%", Image = "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=520&q=80" },
+        new { Name = "Striped asymmetric t-shirt", Price = "820,000đ", OldPrice = "9,780,000đ", Sale = "-92%", Image = "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=520&q=80" },
+        new { Name = "Sơ Mi Nam Tay Dài", Price = "400,000đ", OldPrice = "", Sale = "", Image = "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=520&q=80" },
+        new { Name = "Sơ mi caro tay ngắn", Price = "345,000đ", OldPrice = "", Sale = "", Image = "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=520&q=80" },
+        new { Name = "Quần tây xanh navy", Price = "520,000đ", OldPrice = "650,000đ", Sale = "-20%", Image = "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=520&q=80" },
+        new { Name = "Áo thun lưng hở", Price = "310,000đ", OldPrice = "365,000đ", Sale = "-15%", Image = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=520&q=80" },
+        new { Name = "Sơ mi trắng công sở", Price = "390,000đ", OldPrice = "580,000đ", Sale = "-33%", Image = "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=520&q=80" },
+        new { Name = "Quần short pastel", Price = "275,000đ", OldPrice = "", Sale = "", Image = "https://images.unsplash.com/photo-1603252109303-2751441dd157?auto=format&fit=crop&w=520&q=80" }
+    };
+}
+<section class="hero-section page-shell">
+    <img class="hero-image" src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1800&q=85" />
+    <div class="hero-copy">
+        <p>Summer edit</p>
+        <h1>StyleHub</h1>
+        <a href="#products">Mua ngay</a>
+    </div>
+</section>
+<section class="product-section page-shell" id="products">
+    <div class="product-grid">
+        @foreach (var p in products) {
+            <article class="product-item">
+                <div class="product-photo">
+                    @if (!string.IsNullOrEmpty(p.Sale)) { <span class="sale-badge">@p.Sale</span> }
+                    <img src="@p.Image" alt="@p.Name" />
+                </div>
+                <h2>@p.Name</h2>
+                <div class="price-row">
+                    <span class="price">@p.Price</span>
+                    @if (!string.IsNullOrEmpty(p.OldPrice)) { <span class="old-price">@p.OldPrice</span> }
+                </div>
+            </article>
+        }
+    </div>
+</section>
+<section class="style-note page-shell">
+    <p>New arrivals</p>
+    <h2>Những form dáng tối giản, dễ phối và đủ chỉn chu cho cả tuần.</h2>
+</section>
