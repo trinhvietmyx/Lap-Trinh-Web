@@ -1,1 +1,4 @@
-Wordpres
+1. Wordpres
+2. ASP.NET CORE x Tạo project MVC
+3. code đã làm những file gì
+4. Up lên githud và them thành viên nhóm

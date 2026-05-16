@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -19,7 +19,18 @@
                 <div class="navbar-collapse collapse">
                     <ul class="navbar-nav main-menu mx-auto">
                         <li class="nav-item"><a class="nav-link active" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#products">Sản phẩm</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/Product/Category" id="navbarDropdown" role="button" aria-expanded="false">
+                                Sản phẩm
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="/Product/Category">Tất cả sản phẩm</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/Product/Category/Áo">Áo</a></li>
+                                <li><a class="dropdown-item" href="/Product/Category/Quần">Quần</a></li>
+                                <li><a class="dropdown-item" href="/Product/Category/Váy">Váy</a></li>
+                            </ul>
+                        </li>
                         <li class="nav-item"><a class="nav-link" href="#blog">Blog</a></li>
                     </ul>
                 </div>
@@ -27,5 +38,9 @@
         </nav>
     </header>
     <main role="main">@RenderBody()</main>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

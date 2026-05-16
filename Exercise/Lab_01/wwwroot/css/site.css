@@ -57,6 +57,39 @@ a {
   transform: translateY(-1px);
 }
 
+/* Dropdown Custom Styling */
+.nav-item.dropdown:hover .dropdown-menu {
+  display: block;
+  margin-top: 0;
+}
+
+.dropdown-menu {
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  padding: 1rem 0;
+  animation: dropdownFade 250ms ease;
+}
+
+.dropdown-item {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #3d3d3d;
+  padding: 0.6rem 2rem;
+  transition: all 180ms ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f8f8;
+  color: #111;
+  padding-left: 2.2rem;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .header-actions {
   display: flex;
   align-items: center;
