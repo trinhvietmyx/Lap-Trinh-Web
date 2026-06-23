@@ -1,0 +1,36 @@
+@model IEnumerable<Lab_01.Models.Product>
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<section class="hero-section page-shell">
+    <img class="hero-image" src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1800&q=85" />
+    <div class="hero-copy">
+        <p>Summer edit</p>
+        <h1>StyleHub</h1>
+        <a href="#products">Mua ngay</a>
+    </div>
+</section>
+
+<section class="product-section page-shell" id="products">
+    <div class="product-grid">
+        @foreach (var p in Model) {
+            <article class="product-item">
+                <a asp-action="Details" asp-route-id="@p.Id" class="product-photo">
+                    @if (!string.IsNullOrEmpty(p.Sale)) { <span class="sale-badge">@p.Sale</span> }
+                    <img src="@p.Image" alt="@p.Name" />
+                </a>
+                <h2><a asp-action="Details" asp-route-id="@p.Id">@p.Name</a></h2>
+                <div class="price-row">
+                    <span class="price">@p.Price</span>
+                    @if (!string.IsNullOrEmpty(p.OldPrice)) { <span class="old-price">@p.OldPrice</span> }
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="style-note page-shell">
+    <p>New arrivals</p>
+    <h2>Những form dáng tối giản, dễ phối và đủ chỉn chu cho cả tuần.</h2>
+</section>

@@ -1,0 +1,70 @@
+@model IEnumerable<Lab_01.Models.Product>
+@{
+    ViewData["Title"] = "Sản phẩm";
+}
+
+<section class="hero-section page-shell" style="background: #f4f4f4; min-height: 200px;">
+    <div class="hero-copy" style="padding: 40px;">
+        <p>Bộ sưu tập mới</p>
+        <h1 style="font-size: 3rem;">Shop All</h1>
+    </div>
+</section>
+
+<section class="product-section page-shell">
+    <!-- Category Filter Bar -->
+    <div class="category-filter" style="margin-bottom: 40px; display: flex; justify-content: center; gap: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+        <a href="/Product/Category" 
+           style="font-family: Arial, sans-serif; font-weight: bold; color: @(string.IsNullOrEmpty(ViewBag.CurrentCategory) ? "#111" : "#999"); border-bottom: @(string.IsNullOrEmpty(ViewBag.CurrentCategory) ? "2px solid #111" : "none"); padding: 5px 0;">
+           Tất cả
+        </a>
+        @foreach (var cat in ViewBag.Categories)
+        {
+            <a href="/Product/Category/@cat" 
+               style="font-family: Arial, sans-serif; font-weight: bold; color: @(ViewBag.CurrentCategory == cat ? "#111" : "#999"); border-bottom: @(ViewBag.CurrentCategory == cat ? "2px solid #111" : "none"); padding: 5px 0;">
+               @cat
+            </a>
+        }
+    </div>
+
+    <div class="product-grid">
+        @foreach (var p in Model)
+        {
+            <article class="product-item">
+                <a href="/Product/Detail/@p.Id" class="product-photo">
+                    @if (!string.IsNullOrEmpty(p.Sale))
+                    {
+                        <span class="sale-badge" style="background: #111;">@p.Sale</span>
+                    }
+                    <img src="@p.Image" alt="@p.Name" />
+                </a>
+                <h2><a href="/Product/Detail/@p.Id">@p.Name</a></h2>
+                <div class="price-row">
+                    <span class="price">@p.Price</span>
+                    @if (!string.IsNullOrEmpty(p.OldPrice))
+                    {
+                        <span class="old-price">@p.OldPrice</span>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+
+    <!-- Phân trang tối giản -->
+    <div class="pagination-container page-shell" style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 30px; display: flex; justify-content: center; gap: 20px;">
+        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+        {
+            var url = string.IsNullOrEmpty(ViewBag.CurrentCategory) 
+                ? $"/Product/Category?page={i}" 
+                : $"/Product/Category/{ViewBag.CurrentCategory}?page={i}";
+            <a href="@url" 
+               style="font-family: Arial, sans-serif; font-weight: bold; padding: 5px 10px; color: @(ViewBag.CurrentPage == i ? "#111" : "#999"); border-bottom: @(ViewBag.CurrentPage == i ? "2px solid #111" : "none");">
+               @i
+            </a>
+        }
+    </div>
+</section>
+
+<section class="style-note page-shell">
+    <p>StyleHub Edit</p>
+    <h2>Chất liệu cao cấp, đường may tinh tế.</h2>
+</section>
