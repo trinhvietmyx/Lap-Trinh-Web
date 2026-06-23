@@ -1,0 +1,799 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Text.Json
+@using GIUA_KY_WEB_3AE.Data
+@using GIUA_KY_WEB_3AE.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext DbContext
+@{
+    var cartCount = 0;
+    var unreadNotificationCount = 0;
+    var cartKey = "Mi3AECart_Guest";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null)
+        {
+            cartKey = $"Mi3AECart_User_{user.Id}";
+            unreadNotificationCount = await DbContext.Notifications.CountAsync(n => n.UserId == user.Id && !n.IsRead);
+        }
+
+        // Đã đăng nhập: Tính tổng món ăn từ giỏ hàng User và giỏ hàng Guest (nếu chưa gộp)
+        var userCartJson = Context.Session.GetString(cartKey);
+        var guestCartJson = Context.Session.GetString("Mi3AECart_Guest");
+
+        var totalItems = new List<GIUA_KY_WEB_3AE.Models.CartItemViewModel>();
+        if (!string.IsNullOrEmpty(userCartJson))
+        {
+            try
+            {
+                var userItems = JsonSerializer.Deserialize<List<GIUA_KY_WEB_3AE.Models.CartItemViewModel>>(userCartJson);
+                if (userItems != null) totalItems.AddRange(userItems);
+            }
+            catch {}
+        }
+        if (!string.IsNullOrEmpty(guestCartJson))
+        {
+            try
+            {
+                var guestItems = JsonSerializer.Deserialize<List<GIUA_KY_WEB_3AE.Models.CartItemViewModel>>(guestCartJson);
+                if (guestItems != null)
+                {
+                    foreach (var guestItem in guestItems)
+                    {
+                        var existing = totalItems.FirstOrDefault(i => i.ProductId == guestItem.ProductId);
+                        if (existing != null)
+                        {
+                            existing.Quantity += guestItem.Quantity;
+                        }
+                        else
+                        {
+                            totalItems.Add(guestItem);
+                        }
+                    }
+                }
+            }
+            catch {}
+        }
+        cartCount = totalItems.Sum(i => i.Quantity);
+    }
+    else
+    {
+        // Khách vãng lai: Lấy trực tiếp từ giỏ hàng Guest
+        var cartJson = Context.Session.GetString(cartKey);
+        if (!string.IsNullOrEmpty(cartJson))
+        {
+            try
+            {
+                var cartItems = JsonSerializer.Deserialize<List<GIUA_KY_WEB_3AE.Models.CartItemViewModel>>(cartJson);
+                cartCount = cartItems?.Sum(i => i.Quantity) ?? 0;
+            }
+            catch {}
+        }
+    }
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Mì 3AE - Hương Vị Quảng Nam</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Tải Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Tải Font Outfit từ Google Fonts để giao diện premium -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #FFF8F0;
+            color: #3E2723;
+        }
+        @@media (max-width: 576px) {
+            .toast-container {
+                top: auto !important;
+                bottom: 24px !important;
+                left: 16px !important;
+                right: 16px !important;
+                width: auto !important;
+            }
+        }
+        .navbar-custom {
+            background-color: rgba(255, 248, 240, 0.85) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(62, 39, 35, 0.08);
+        }
+        .navbar-custom .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+        }
+        .navbar-custom .nav-link,
+        .navbar-custom .btn,
+        .navbar-custom .dropdown-toggle {
+            font-weight: 500;
+            color: #5d4037 !important;
+            transition: color 0.2s ease;
+            white-space: nowrap !important;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #D2691E !important;
+        }
+        @@media (min-width: 992px) and (max-width: 1280px) {
+            .navbar-custom .nav-link {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                font-size: 0.85rem;
+            }
+            .navbar-custom .btn {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+                font-size: 0.85rem;
+            }
+            .navbar-custom .navbar-brand {
+                font-size: 1.15rem;
+            }
+        }
+        .footer-custom {
+            background-color: #FFF5EB;
+            border-top: 1px solid rgba(62, 39, 35, 0.06);
+            color: #5d4037;
+            font-size: 0.9rem;
+        }
+        .hover-link {
+            transition: all 0.2s ease;
+        }
+        .hover-link:hover {
+            color: #D2691E !important;
+            padding-left: 5px;
+        }
+
+        /* Premium Notification Dropdown CSS */
+        .dropdown-toggle-no-caret::after {
+            display: none !important;
+        }
+        .notification-dropdown-menu {
+            border: 1px solid rgba(210, 105, 30, 0.1) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+        }
+        .notification-item-dropdown {
+            display: flex;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: #3E2723;
+            border-bottom: 1px solid rgba(62, 39, 35, 0.05);
+            transition: background-color 0.2s ease;
+        }
+        .notification-item-dropdown:hover {
+            background-color: #FFF5EB;
+            color: #3E2723;
+        }
+        .notification-item-dropdown.unread {
+            background-color: rgba(210, 105, 30, 0.04);
+        }
+        .notification-item-dropdown.unread:hover {
+            background-color: rgba(210, 105, 30, 0.08);
+        }
+        .notification-icon-wrapper {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 1.1rem;
+        }
+        .bg-status-pending { background-color: #FFF3E0; color: #EF6C00; }
+        .bg-status-confirmed { background-color: #E8F5E9; color: #2E7D32; }
+        .bg-status-shipped { background-color: #E3F2FD; color: #1565C0; }
+        .bg-status-completed { background-color: #E8F5E9; color: #2E7D32; }
+        .bg-status-cancelled { background-color: #FFEBEE; color: #C62828; }
+        .bg-status-default { background-color: #ECEFF1; color: #37474F; }
+        
+        .notification-text-wrapper {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .notification-title-dropdown {
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .notification-desc-dropdown {
+            font-size: 0.82rem;
+            color: #757575;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+        .notification-time-dropdown {
+            font-size: 0.75rem;
+            color: #bdbdbd;
+        }
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #D2691E;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 6px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top py-3">
+            <div class="container">
+                <a class="navbar-brand text-dark d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-shop text-primary me-2"></i> Mì 3AE
+                </a>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-controller="Product" asp-action="Index">
+                                <i class="bi bi-grid-fill me-1"></i> Thực đơn
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-controller="Product" asp-action="Contact">
+                                <i class="bi bi-envelope-fill me-1"></i> Liên hệ
+                            </a>
+                        </li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link px-3" asp-area="Admin" asp-controller="Product" asp-action="Index">
+                                    <i class="bi bi-egg-fried me-1"></i> Quản lý Món ăn
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link px-3" asp-area="Admin" asp-controller="Categories" asp-action="Index">
+                                    <i class="bi bi-tags-fill me-1"></i> Quản lý Danh mục
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link px-3" asp-area="Admin" asp-controller="Order" asp-action="Manage">
+                                    <i class="bi bi-clipboard2-data-fill me-1"></i> Quản lý Đơn hàng
+                                </a>
+                            </li>
+                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                                <a class="btn btn-primary px-3 rounded-pill text-white shadow-sm d-inline-block" asp-area="Admin" asp-controller="Product" asp-action="Add">
+                                    <i class="bi bi-plus-circle me-1"></i> Thêm Món ăn
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Icon Giỏ hàng kèm badge số lượng -->
+                        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                            <a class="nav-link px-3 py-1 bg-light rounded-pill border d-flex align-items-center position-relative" asp-controller="Cart" asp-action="Index" style="height: 38px;">
+                                <i class="bi bi-cart3 text-dark fs-5 me-1"></i>
+                                <span class="text-dark fw-semibold small d-none d-lg-inline me-1">Giỏ hàng</span>
+                                <span id="cartCountBadge" class="badge rounded-pill bg-danger text-white ms-1 @(cartCount > 0 ? "" : "d-none")" style="font-size: 0.75rem;">
+                                    @cartCount
+                                </span>
+                            </a>
+                        </li>
+
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item dropdown ms-lg-2 mt-2 mt-lg-0" id="notificationDropdownContainer">
+                                <a class="nav-link dropdown-toggle px-3 py-1 bg-light rounded-pill border d-flex align-items-center position-relative dropdown-toggle-no-caret" href="#" id="navbarNotificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="height: 38px;">
+                                    <i class="bi bi-bell-fill text-dark fs-5 me-1"></i>
+                                    <span class="text-dark fw-semibold small d-none d-lg-inline me-1">Thông báo</span>
+                                    <span id="notificationBadge" class="badge rounded-pill bg-danger text-white ms-1 @(unreadNotificationCount > 0 ? "" : "d-none")" style="font-size: 0.75rem;">
+                                        @unreadNotificationCount
+                                    </span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-0 overflow-hidden notification-dropdown-menu" aria-labelledby="navbarNotificationDropdown" style="min-width: 320px; max-width: 360px;">
+                                    <!-- Header -->
+                                    <li class="px-3 py-2.5 border-bottom d-flex justify-content-between align-items-center bg-light bg-opacity-75">
+                                        <span class="fw-bold text-dark" style="font-size: 0.9rem;">Thông báo mới nhận</span>
+                                        <button class="btn btn-link text-primary p-0 border-0 shadow-none btn-sm fw-semibold text-decoration-none" id="markAllReadBtn" style="font-size: 0.8rem; color: #D2691E !important;">Đánh dấu đã đọc</button>
+                                    </li>
+                                    <!-- List container -->
+                                    <div id="notificationListContainer" style="max-height: 320px; overflow-y: auto;">
+                                        <div class="text-center py-4 text-muted" id="notificationLoading">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status" style="color: #D2691E !important;"></div>
+                                            <span class="ms-2 small">Đang tải thông báo...</span>
+                                        </div>
+                                        <ul class="list-unstyled mb-0" id="notificationDropdownList">
+                                            <!-- Sẽ render bằng JS -->
+                                        </ul>
+                                    </div>
+                                    <!-- Footer -->
+                                    <li class="border-top text-center bg-light bg-opacity-75">
+                                        <a class="dropdown-item py-2 fw-semibold text-decoration-none text-center small rounded-0" asp-controller="Notifications" asp-action="Index" style="color: #D2691E !important; font-size: 0.82rem;">
+                                            Xem tất cả thông báo
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item dropdown ms-lg-3">
+                                <a class="nav-link dropdown-toggle px-3 py-1 bg-light rounded-pill border d-flex align-items-center" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle text-primary me-2 fs-5"></i>
+                                    <span class="text-dark fw-semibold small">@User.Identity?.Name</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3 p-2" aria-labelledby="navbarUserDropdown" style="min-width: 160px;">
+                                    <li>
+                                        <a class="dropdown-item rounded-2 d-flex align-items-center fw-semibold small mb-1" asp-controller="Account" asp-action="Settings">
+                                            <i class="bi bi-gear me-2 text-secondary"></i> Cài đặt tài khoản
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-2 d-flex align-items-center fw-semibold small mb-1" asp-controller="Order" asp-action="History">
+                                            <i class="bi bi-clock-history me-2 text-primary"></i> Lịch sử mua hàng
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-2 d-flex align-items-center fw-semibold small mb-1" asp-controller="Notifications" asp-action="Index">
+                                            <i class="bi bi-bell me-2 text-primary"></i> Hộp thư thông báo
+                                            @if (unreadNotificationCount > 0)
+                                            {
+                                                <span class="badge bg-danger rounded-pill ms-auto">@unreadNotificationCount</span>
+                                            }
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item text-danger rounded-2 d-flex align-items-center fw-semibold small">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item ms-lg-3">
+                                <a class="btn btn-outline-dark px-3 rounded-pill fw-bold" asp-controller="Account" asp-action="Login">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                                </a>
+                            </li>
+                            <li class="nav-item ms-lg-2">
+                                <a class="btn btn-dark px-3 rounded-pill fw-bold" asp-controller="Account" asp-action="Register">
+                                    <i class="bi bi-person-plus me-1"></i> Đăng ký
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Thêm khoảng cách đệm trên do Navbar sử dụng fixed-top -->
+    <div style="margin-top: 90px; min-height: calc(100vh - 220px);">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer-custom py-5 mt-5">
+        <div class="container">
+            <div class="row text-start">
+                <!-- Cột 1: Giới thiệu -->
+                <div class="col-md-4 mb-4">
+                    <h5 class="text-dark fw-bold mb-3"><i class="bi bi-shop text-primary me-2"></i>Mì 3AE</h5>
+                    <p class="text-secondary lh-lg mb-3">
+                        Hệ thống Mì Quảng gia truyền Mì 3AE. Chúng tôi mang đến những tô mì Quảng nóng hổi, chuẩn vị xứ Quảng với dịch vụ chu đáo nhất.
+                    </p>
+                    <p class="text-secondary mb-1"><i class="bi bi-geo-alt-fill me-2 text-primary"></i> 123 Đường Ba Tháng Hai, Quận 10, TP. HCM</p>
+                    <p class="text-secondary"><i class="bi bi-telephone-fill me-2 text-primary"></i> +84 909 3AE 3AE</p>
+                </div>
+                <!-- Cột 2: Liên kết nhanh -->
+                <div class="col-md-4 mb-4">
+                    <h5 class="text-dark fw-bold mb-3">Liên kết nhanh</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a class="text-secondary text-decoration-none hover-link" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-chevron-right me-1 text-primary small"></i> Trang chủ
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a class="text-secondary text-decoration-none hover-link" asp-controller="Product" asp-action="Index">
+                                <i class="bi bi-chevron-right me-1 text-primary small"></i> Thực đơn
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a class="text-secondary text-decoration-none hover-link" asp-controller="Product" asp-action="Contact">
+                                <i class="bi bi-envelope me-1 text-primary small"></i> Liên hệ
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Cột 3: Đăng ký nhận tin tức -->
+                <div class="col-md-4 mb-4">
+                    <h5 class="text-dark fw-bold mb-3">Nhận khuyến mãi ưu đãi</h5>
+                    <p class="text-secondary mb-3">Đăng ký nhận thông tin khuyến mãi và các quà tặng ẩm thực mới nhất từ Mì 3AE.</p>
+                    <div class="input-group">
+                        <input type="email" class="form-control rounded-start-pill border-end-0 px-3 bg-white" placeholder="Nhập email của bạn..." aria-label="Email" style="border: 1px solid rgba(62,39,35,0.08);">
+                        <button class="btn btn-primary rounded-end-pill px-4 text-white shadow-sm" type="button">Đăng ký</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 text-secondary opacity-25">
+            <div class="text-center text-secondary">
+                <p class="mb-0">&copy; 2026 - Mì 3AE - Hệ Thống Mì Quảng Gia Truyền</p>
+            </div>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- Container chứa Toast nổi dùng chung -->
+    <div id="toastContainerShared" class="toast-container position-fixed" style="top: 100px; right: 24px; z-index: 1080;">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div id="cartToast" class="toast align-items-center text-white bg-success border-0 shadow rounded-4 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center py-3 px-3">
+                        <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                        <div>
+                            <strong class="d-block text-white" style="font-size: 0.95rem;">Thành công</strong>
+                            <span class="small opacity-90">@TempData["SuccessMessage"]</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <!-- Script tự động khởi tạo và hiển thị Toast khi tải trang -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var toastEl = document.getElementById('cartToast');
+                if (toastEl) {
+                    var toast = new bootstrap.Toast(toastEl, {
+                        autohide: true,
+                        delay: 4000
+                    });
+                    toast.show();
+                }
+            });
+        </script>
+    }
+
+    <!-- ==================== WIDGET CHATBOT AI MÌ 3AE ==================== -->
+    <!-- Bong bóng chat nổi -->
+    <div id="chatbotBubble" class="position-fixed shadow-lg d-flex align-items-center justify-content-center" style="bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background-color: #D2691E; color: white; z-index: 1050; cursor: pointer; transition: all 0.3s ease;">
+        <i class="bi bi-chat-dots-fill fs-3"></i>
+    </div>
+
+    <!-- Cửa sổ chat chính -->
+    <div id="chatbotWindow" class="position-fixed shadow-lg d-flex flex-column border-0 rounded-4 overflow-hidden bg-white d-none" style="bottom: 96px; right: 24px; width: 360px; height: 500px; z-index: 1050; border: 1px solid rgba(210,105,30,0.15) !important; transition: all 0.3s ease;">
+        <!-- Header cửa sổ chat -->
+        <div class="d-flex align-items-center justify-content-between px-3 py-3 text-white" style="background-color: #D2691E;">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-robot fs-4"></i>
+                <div>
+                    <h6 class="mb-0 fw-bold" style="font-size: 0.95rem;">Trợ lý ảo Mì 3AE</h6>
+                    <small class="opacity-75" style="font-size: 0.75rem;">Đang trực tuyến</small>
+                </div>
+            </div>
+            <button id="chatbotClose" class="btn btn-link text-white p-0 border-0 shadow-none"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <!-- Vùng chứa tin nhắn -->
+        <div id="chatbotMessages" class="flex-grow-1 p-3 overflow-y-auto bg-light bg-opacity-50" style="font-size: 0.88rem; scrollbar-width: thin;">
+            <div class="d-flex gap-2 mb-3">
+                <div class="rounded-3 p-2 px-3 text-dark shadow-sm" style="background-color: #FFF5EB; max-width: 85%; border: 1px solid rgba(210,105,30,0.08);">
+                    Chào bạn! 🍜 Tôi là **Trợ lý ảo Mì 3AE**. Em có thể giúp gì cho bạn hôm nay ạ? Bạn có thể hỏi về thực đơn món ăn hoặc nhập mã đơn hàng dạng `#mã` để em tra cứu trạng thái nhé!
+                </div>
+            </div>
+        </div>
+
+        <!-- Khung hiển thị Typing Indicator (chờ AI phản hồi) -->
+        <div id="chatbotTyping" class="px-3 py-1 bg-light bg-opacity-50 d-none" style="font-size: 0.8rem;">
+            <div class="d-inline-flex gap-1 align-items-center rounded-3 p-2 px-3 text-secondary shadow-sm" style="background-color: #FFF5EB; border: 1px solid rgba(210,105,30,0.08);">
+                <span class="spinner-grow spinner-grow-sm text-secondary" role="status" style="width: 6px; height: 6px;"></span>
+                <span class="spinner-grow spinner-grow-sm text-secondary" role="status" style="width: 6px; height: 6px; animation-delay: 0.2s;"></span>
+                <span class="spinner-grow spinner-grow-sm text-secondary" role="status" style="width: 6px; height: 6px; animation-delay: 0.4s;"></span>
+                <span class="ms-1 small">Mì 3AE đang gõ...</span>
+            </div>
+        </div>
+
+        <!-- Khung các câu hỏi gợi ý nhanh -->
+        <div class="px-3 py-2 bg-white border-top border-light d-flex gap-1 overflow-x-auto flex-nowrap" id="chatbotSuggestions" style="font-size: 0.8rem; scrollbar-width: none; -webkit-overflow-scrolling: touch;">
+            <span class="badge bg-light text-secondary border rounded-pill py-1.5 px-2.5 cursor-pointer chatbot-suggest-btn" style="cursor: pointer; border-color: rgba(62,39,35,0.08) !important;">Thực đơn hôm nay?</span>
+            <span class="badge bg-light text-secondary border rounded-pill py-1.5 px-2.5 cursor-pointer chatbot-suggest-btn" style="cursor: pointer; border-color: rgba(62,39,35,0.08) !important;">Địa chỉ quán ở đâu?</span>
+            <span class="badge bg-light text-secondary border rounded-pill py-1.5 px-2.5 cursor-pointer chatbot-suggest-btn" style="cursor: pointer; border-color: rgba(62,39,35,0.08) !important;">Kiểm tra đơn hàng?</span>
+        </div>
+
+        <!-- Footer nhập tin nhắn -->
+        <div class="p-2 bg-white border-top d-flex gap-1 align-items-center">
+            <input type="text" id="chatbotInput" class="form-control rounded-pill border-light-subtle px-3 py-2" placeholder="Nhập tin nhắn của bạn..." style="font-size: 0.85rem; border: 1px solid rgba(62,39,35,0.12);" />
+            <button id="chatbotSend" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center p-0" style="width: 38px; height: 38px; background-color: #D2691E; border: none; color: white;">
+                <i class="bi bi-send-fill fs-6"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Script điều khiển Chatbot AI -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const bubble = document.getElementById("chatbotBubble");
+            const win = document.getElementById("chatbotWindow");
+            const closeBtn = document.getElementById("chatbotClose");
+            const sendBtn = document.getElementById("chatbotSend");
+            const inputEl = document.getElementById("chatbotInput");
+            const msgsContainer = document.getElementById("chatbotMessages");
+            const typingEl = document.getElementById("chatbotTyping");
+            const suggestBtns = document.querySelectorAll(".chatbot-suggest-btn");
+
+            // Hiệu ứng hover nổi bật bong bóng chat
+            bubble.addEventListener("mouseover", () => {
+                bubble.style.transform = "scale(1.1) rotate(5deg)";
+            });
+            bubble.addEventListener("mouseout", () => {
+                bubble.style.transform = "scale(1) rotate(0deg)";
+            });
+
+            // Mở/đóng cửa sổ chat
+            bubble.addEventListener("click", () => {
+                win.classList.toggle("d-none");
+                if (!win.classList.contains("d-none")) {
+                    inputEl.focus();
+                    scrollToBottom();
+                }
+            });
+
+            closeBtn.addEventListener("click", () => {
+                win.classList.add("d-none");
+            });
+
+            // Cuộn xuống tin nhắn mới nhất
+            function scrollToBottom() {
+                msgsContainer.scrollTop = msgsContainer.scrollHeight;
+            }
+
+            // Gửi tin nhắn
+            async function handleSendMessage(text) {
+                if (!text || text.trim() === "") return;
+                
+                // Hiển thị tin nhắn người dùng
+                appendMessage(text, "user");
+                inputEl.value = "";
+                scrollToBottom();
+
+                // Hiển thị trạng thái đang trả lời (typing indicator)
+                typingEl.classList.remove("d-none");
+                scrollToBottom();
+
+                try {
+                    const response = await fetch("/api/chat/send", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ Message: text })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        appendMessage(data.reply, "bot");
+                    } else {
+                        if (response.status === 401) {
+                            appendMessage("Dạ, bạn vui lòng đăng nhập tài khoản để trò chuyện cùng Trợ lý ảo Mì 3AE nhé! 🍜", "bot");
+                        } else {
+                            appendMessage("Rất tiếc, máy chủ phản hồi lỗi. Bạn vui lòng thử lại sau.", "bot");
+                        }
+                    }
+                } catch (error) {
+                    appendMessage("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.", "bot");
+                } finally {
+                    typingEl.classList.add("d-none");
+                    scrollToBottom();
+                }
+            }
+
+            // Thêm bong bóng chat vào container
+            function appendMessage(text, sender) {
+                const messageWrapper = document.createElement("div");
+                messageWrapper.className = `d-flex gap-2 mb-3 ${sender === "user" ? "justify-content-end" : ""}`;
+                
+                const bubbleEl = document.createElement("div");
+                bubbleEl.className = "rounded-3 p-2 px-3 shadow-sm";
+                
+                if (sender === "user") {
+                    bubbleEl.style.backgroundColor = "#D2691E";
+                    bubbleEl.style.color = "white";
+                    bubbleEl.style.maxWidth = "85%";
+                    bubbleEl.textContent = text;
+                } else {
+                    bubbleEl.style.backgroundColor = "#FFF5EB";
+                    bubbleEl.style.color = "#3E2723";
+                    bubbleEl.style.maxWidth = "85%";
+                    bubbleEl.style.border = "1px solid rgba(210,105,30,0.08)";
+                    
+                    // Render xuống dòng an toàn bằng DOM (tránh XSS qua innerHTML với nội dung từ API)
+                    const lines = text.split("\n");
+                    lines.forEach((line, idx) => {
+                        const span = document.createElement("span");
+                        span.textContent = line;
+                        bubbleEl.appendChild(span);
+                        if (idx < lines.length - 1) {
+                            bubbleEl.appendChild(document.createElement("br"));
+                        }
+                    });
+                }
+                
+                messageWrapper.appendChild(bubbleEl);
+                msgsContainer.appendChild(messageWrapper);
+            }
+
+            // Sự kiện Click và Enter
+            sendBtn.addEventListener("click", () => handleSendMessage(inputEl.value));
+            inputEl.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    handleSendMessage(inputEl.value);
+                }
+            });
+
+            // Sự kiện click gợi ý nhanh
+            suggestBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const question = btn.textContent;
+                    handleSendMessage(question);
+                });
+            });
+        });
+    </script>
+
+    <!-- Script điều khiển Hộp thư thông báo Dropdown -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const dropdownToggle = document.getElementById("navbarNotificationDropdown");
+            if (!dropdownToggle) return;
+
+            const dropdownList = document.getElementById("notificationDropdownList");
+            const loadingIndicator = document.getElementById("notificationLoading");
+            const badge = document.getElementById("notificationBadge");
+            const markAllReadBtn = document.getElementById("markAllReadBtn");
+
+            // Biểu tượng động theo trạng thái đơn hàng
+            function getNotificationIconClass(status) {
+                switch (status) {
+                    case "Pending": return "bi-hourglass-split";
+                    case "Confirmed": return "bi-check-circle-fill";
+                    case "Shipped": return "bi-truck";
+                    case "Completed": return "bi-box-seam-fill";
+                    case "Cancelled": return "bi-x-circle-fill";
+                    default: return "bi-bell-fill";
+                }
+            }
+
+            // Lớp màu nền tương ứng cho icon wrapper
+            function getNotificationStatusBg(status) {
+                switch (status) {
+                    case "Pending": return "bg-status-pending";
+                    case "Confirmed": return "bg-status-confirmed";
+                    case "Shipped": return "bg-status-shipped";
+                    case "Completed": return "bg-status-completed";
+                    case "Cancelled": return "bg-status-cancelled";
+                    default: return "bg-status-default";
+                }
+            }
+
+            // Hàm tải danh sách thông báo mới nhất qua AJAX
+            async function loadLatestNotifications() {
+                loadingIndicator.classList.remove("d-none");
+                dropdownList.innerHTML = "";
+                
+                try {
+                    const response = await fetch("/Notifications/GetLatest");
+                    if (response.ok) {
+                        const notifications = await response.json();
+                        loadingIndicator.classList.add("d-none");
+                        
+                        if (notifications.length === 0) {
+                            dropdownList.innerHTML = `
+                                <li class="text-center py-4 text-muted small">
+                                    <i class="bi bi-bell-slash fs-3 d-block mb-2 text-opacity-50" style="color: #D2691E;"></i>
+                                    Bạn chưa có thông báo nào.
+                                </li>`;
+                            return;
+                        }
+
+                        notifications.forEach(n => {
+                            const iconClass = getNotificationIconClass(n.orderStatus);
+                            const bgClass = getNotificationStatusBg(n.orderStatus);
+                            const itemClass = n.isRead ? "" : "unread";
+                            const dotHtml = n.isRead ? "" : '<span class="unread-dot"></span>';
+                            
+                            const li = document.createElement("li");
+                            li.innerHTML = `
+                                <a href="/Notifications/Open/${n.id}" class="notification-item-dropdown ${itemClass}">
+                                    <div class="notification-icon-wrapper ${bgClass}">
+                                        <i class="bi ${iconClass}"></i>
+                                    </div>
+                                    <div class="notification-text-wrapper">
+                                        <div class="notification-title-dropdown">
+                                            <span class="text-truncate" style="max-width: 180px;">${n.title}</span>
+                                            ${dotHtml}
+                                        </div>
+                                        <div class="notification-desc-dropdown">${n.message}</div>
+                                        <div class="notification-time-dropdown d-flex justify-content-between align-items-center">
+                                            <span>${n.createdAt}</span>
+                                            ${n.orderId ? `<span class="badge bg-secondary text-white px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">Đơn #${n.orderId}</span>` : ""}
+                                        </div>
+                                    </div>
+                                </a>`;
+                            dropdownList.appendChild(li);
+                        });
+                    } else {
+                        dropdownList.innerHTML = '<li class="text-center py-4 text-danger small">Lỗi tải thông báo. Vui lòng thử lại.</li>';
+                    }
+                } catch (error) {
+                    dropdownList.innerHTML = '<li class="text-center py-4 text-danger small">Lỗi kết nối mạng.</li>';
+                }
+            }
+
+            // Gọi tải dữ liệu khi người dùng bấm mở Dropdown
+            const dropdownContainer = document.getElementById("notificationDropdownContainer");
+            dropdownContainer.addEventListener("show.bs.dropdown", function () {
+                loadLatestNotifications();
+            });
+
+            // Xử lý nút Đánh dấu tất cả đã đọc
+            markAllReadBtn.addEventListener("click", async function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                try {
+                    const response = await fetch("/Notifications/MarkAllAsReadApi", {
+                        method: "POST"
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            // Ẩn badge đếm số lượng thông báo chưa đọc
+                            if (badge) {
+                                badge.classList.add("d-none");
+                                badge.textContent = "0";
+                            }
+                            
+                            // Cập nhật lại UI các item đang hiển thị
+                            const unreadItems = dropdownList.querySelectorAll(".notification-item-dropdown.unread");
+                            unreadItems.forEach(item => {
+                                item.classList.remove("unread");
+                                const dot = item.querySelector(".unread-dot");
+                                if (dot) dot.remove();
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error("Lỗi đánh dấu đã đọc:", error);
+                }
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="1050" viewBox="0 0 1300 1050">
+  <defs>
+    <style>
+      .title { font: 700 24px Arial, sans-serif; fill: #111827; }
+      .label { font: 700 17px Arial, sans-serif; fill: #111827; }
+      .small { font: 14px Arial, sans-serif; fill: #111827; }
+      .actor-line, .assoc { fill: none; stroke: #111827; stroke-width: 1.7; }
+      .boundary { fill: #ffffff; stroke: #111827; stroke-width: 1.7; }
+      .uc { fill: #ffffff; stroke: #111827; stroke-width: 1.7; }
+    </style>
+  </defs>
+
+  <text x="650" y="38" text-anchor="middle" class="title">Use Case Diagram Cấp 0 - Mì 3AE</text>
+
+  <rect x="260" y="70" width="780" height="910" class="boundary"/>
+  <text x="650" y="100" text-anchor="middle" class="label">Hệ thống đặt món trực tuyến Mì 3AE</text>
+
+  <!-- Actor Admin -->
+  <g transform="translate(120,495)">
+    <circle cx="0" cy="-42" r="20" class="actor-line"/>
+    <line x1="0" y1="-22" x2="0" y2="35" class="actor-line"/>
+    <line x1="-36" y1="2" x2="36" y2="2" class="actor-line"/>
+    <line x1="0" y1="35" x2="-30" y2="80" class="actor-line"/>
+    <line x1="0" y1="35" x2="30" y2="80" class="actor-line"/>
+    <text x="0" y="114" text-anchor="middle" class="label">Admin</text>
+  </g>
+
+  <!-- Actor User -->
+  <g transform="translate(1180,495)">
+    <circle cx="0" cy="-42" r="20" class="actor-line"/>
+    <line x1="0" y1="-22" x2="0" y2="35" class="actor-line"/>
+    <line x1="-36" y1="2" x2="36" y2="2" class="actor-line"/>
+    <line x1="0" y1="35" x2="-30" y2="80" class="actor-line"/>
+    <line x1="0" y1="35" x2="30" y2="80" class="actor-line"/>
+    <text x="0" y="114" text-anchor="middle" class="label">Người dùng</text>
+  </g>
+
+  <!-- Use cases -->
+  <g id="uc01"><ellipse cx="650" cy="165" rx="165" ry="44" class="uc"/><text x="650" y="158" text-anchor="middle" class="small">UC0.1</text><text x="650" y="181" text-anchor="middle" class="label">Truy cập hệ thống</text></g>
+  <g id="uc02"><ellipse cx="650" cy="260" rx="165" ry="44" class="uc"/><text x="650" y="253" text-anchor="middle" class="small">UC0.2</text><text x="650" y="276" text-anchor="middle" class="label">Quản lý tài khoản</text></g>
+  <g id="uc03"><ellipse cx="650" cy="355" rx="205" ry="44" class="uc"/><text x="650" y="348" text-anchor="middle" class="small">UC0.3</text><text x="650" y="371" text-anchor="middle" class="label">Xem thực đơn &amp; thông tin món</text></g>
+  <g id="uc04"><ellipse cx="650" cy="450" rx="165" ry="44" class="uc"/><text x="650" y="443" text-anchor="middle" class="small">UC0.4</text><text x="650" y="466" text-anchor="middle" class="label">Quản lý thực đơn</text></g>
+  <g id="uc05"><ellipse cx="650" cy="545" rx="180" ry="44" class="uc"/><text x="650" y="538" text-anchor="middle" class="small">UC0.5</text><text x="650" y="561" text-anchor="middle" class="label">Quản lý danh mục món</text></g>
+  <g id="uc06"><ellipse cx="650" cy="640" rx="180" ry="44" class="uc"/><text x="650" y="633" text-anchor="middle" class="small">UC0.6</text><text x="650" y="656" text-anchor="middle" class="label">Đặt món &amp; thanh toán</text></g>
+  <g id="uc07"><ellipse cx="650" cy="735" rx="165" ry="44" class="uc"/><text x="650" y="728" text-anchor="middle" class="small">UC0.7</text><text x="650" y="751" text-anchor="middle" class="label">Quản lý đơn hàng</text></g>
+  <g id="uc08"><ellipse cx="650" cy="830" rx="165" ry="44" class="uc"/><text x="650" y="823" text-anchor="middle" class="small">UC0.8</text><text x="650" y="846" text-anchor="middle" class="label">Theo dõi đơn hàng</text></g>
+  <g id="uc09"><ellipse cx="650" cy="925" rx="205" ry="44" class="uc"/><text x="650" y="918" text-anchor="middle" class="small">UC0.9</text><text x="650" y="941" text-anchor="middle" class="label">Tư vấn &amp; hỗ trợ khách hàng</text></g>
+
+  <!-- Admin associations -->
+  <path d="M 155 450 L 495 165" class="assoc"/>
+  <path d="M 155 480 L 490 450" class="assoc"/>
+  <path d="M 155 500 L 475 545" class="assoc"/>
+  <path d="M 155 520 L 490 735" class="assoc"/>
+  <path d="M 155 540 L 490 830" class="assoc"/>
+  <path d="M 155 558 L 450 925" class="assoc"/>
+
+  <!-- User associations -->
+  <path d="M 1145 450 L 805 165" class="assoc"/>
+  <path d="M 1145 470 L 810 260" class="assoc"/>
+  <path d="M 1145 490 L 850 355" class="assoc"/>
+  <path d="M 1145 512 L 825 640" class="assoc"/>
+  <path d="M 1145 535 L 810 830" class="assoc"/>
+  <path d="M 1145 558 L 850 925" class="assoc"/>
+</svg>

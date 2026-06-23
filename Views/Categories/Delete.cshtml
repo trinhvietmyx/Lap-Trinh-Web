@@ -1,0 +1,49 @@
+﻿@model GIUA_KY_WEB_3AE.Models.Category
+
+@{
+    ViewData["Title"] = "Xóa danh mục - " + Model.Name;
+}
+
+<div class="container my-5" style="max-width: 600px;">
+    <!-- Nút quay lại -->
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none text-secondary d-inline-flex align-items-center">
+            <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- Card Xác nhận xóa -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white p-5 text-center">
+        <div class="avatar-tag rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-4" style="width: 70px; height: 70px;">
+            <i class="bi bi-exclamation-triangle-fill display-6"></i>
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-2">Xác nhận xóa danh mục</h1>
+        <p class="text-secondary mb-4">Bạn có chắc chắn muốn xóa danh mục <strong class="text-danger">"@Model.Name"</strong> không? Hành động này không thể hoàn tác và các sản phẩm thuộc danh mục này có thể bị ảnh hưởng.</p>
+
+        <!-- Thông tin tóm tắt -->
+        <div class="p-3 bg-light rounded-3 mb-4 text-start">
+            <div class="row">
+                <div class="col-4 text-muted fw-semibold">Mã danh mục:</div>
+                <div class="col-8 text-dark">#@Model.Id</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-4 text-muted fw-semibold">Tên danh mục:</div>
+                <div class="col-8 text-dark fw-bold">@Model.Name</div>
+            </div>
+        </div>
+
+        <!-- Form thực thi xóa -->
+        <form asp-action="Delete" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Hủy bỏ</a>
+                <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-trash-fill me-1"></i> Xác nhận xóa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

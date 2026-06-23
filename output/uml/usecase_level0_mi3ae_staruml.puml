@@ -1,0 +1,47 @@
+@startuml
+title Use Case Diagram Cấp 0 - Mì 3AE
+
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName Arial
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #111827
+  ArrowColor #111827
+}
+skinparam rectangle {
+  BorderColor #111827
+}
+
+actor "Admin" as Admin
+actor "Người dùng" as User
+
+rectangle "Hệ thống đặt món trực tuyến Mì 3AE" as System {
+  usecase "UC0.1\nTruy cập hệ thống" as UC01
+  usecase "UC0.2\nQuản lý tài khoản" as UC02
+  usecase "UC0.3\nXem thực đơn & thông tin món" as UC03
+  usecase "UC0.4\nQuản lý thực đơn" as UC04
+  usecase "UC0.5\nQuản lý danh mục món" as UC05
+  usecase "UC0.6\nĐặt món & thanh toán" as UC06
+  usecase "UC0.7\nQuản lý đơn hàng" as UC07
+  usecase "UC0.8\nTheo dõi đơn hàng" as UC08
+  usecase "UC0.9\nTư vấn & hỗ trợ khách hàng" as UC09
+}
+
+Admin -- UC01
+Admin -- UC04
+Admin -- UC05
+Admin -- UC07
+Admin -- UC08
+Admin -- UC09
+
+User -- UC01
+User -- UC02
+User -- UC03
+User -- UC06
+User -- UC08
+User -- UC09
+
+@enduml

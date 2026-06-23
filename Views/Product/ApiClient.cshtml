@@ -1,0 +1,389 @@
+@{
+    ViewData["Title"] = "RESTful API Client - Quản lý Sản phẩm";
+}
+
+<div class="container my-5">
+    <!-- Breadcrumb điều hướng -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">RESTful API Client</li>
+        </ol>
+    </nav>
+
+    <!-- Tiêu đề -->
+    <div class="d-flex align-items-center justify-content-between mb-5 pb-3 border-bottom flex-wrap">
+        <div>
+            <h1 class="display-5 fw-bold text-dark mb-1">RESTful API Client</h1>
+            <p class="text-muted mb-0">Thực hành CRUD Sản phẩm thời gian thực qua Web API bằng JavaScript Fetch API.</p>
+        </div>
+        <div class="mt-3 mt-lg-0">
+            <a href="/swagger" target="_blank" class="btn btn-outline-primary rounded-pill px-4 shadow-sm fw-bold">
+                <i class="bi bi-file-earmark-code-fill me-2"></i> Mở Swagger UI
+            </a>
+        </div>
+    </div>
+
+    <!-- Layout 2 cột: Trái (Form Nhập liệu) - Phải (Danh sách API) -->
+    <div class="row g-4">
+        <!-- Cột Trái: Form Thêm/Sửa sản phẩm -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden sticky-top" style="top: 100px; z-index: 10;">
+                <div class="card-header bg-dark text-white p-4">
+                    <h5 class="fw-bold mb-0" id="formTitle">
+                        <i class="bi bi-plus-circle-fill me-2"></i> Thêm Sản Phẩm Mới
+                    </h5>
+                    <small class="text-light opacity-75">Điền thông tin và gửi qua HTTP Request</small>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Form gửi API -->
+                    <form id="apiProductForm" onsubmit="event.preventDefault(); saveProduct();">
+                        <input type="hidden" id="productId" value="" />
+
+                        <!-- Tên món ăn -->
+                        <div class="mb-3">
+                            <label for="productName" class="form-label fw-semibold text-secondary">Tên món ăn <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3" id="productName" placeholder="Ví dụ: Mì Quảng Tôm Thịt" required />
+                        </div>
+
+                        <!-- Giá bán -->
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label fw-semibold text-secondary">Giá bán (VNĐ) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control rounded-start-3" id="productPrice" placeholder="Ví dụ: 45000" min="0" required />
+                                <span class="input-group-text bg-light rounded-end-3">đ</span>
+                            </div>
+                        </div>
+
+                        <!-- Đường dẫn ảnh -->
+                        <div class="mb-3">
+                            <label for="productImageUrl" class="form-label fw-semibold text-secondary">Đường dẫn ảnh món ăn</label>
+                            <input type="text" class="form-control rounded-3" id="productImageUrl" placeholder="Ví dụ: /images/default_product.png hoặc https://example.com/image.jpg" />
+                            <div class="form-text">Nếu để trống, hệ thống sẽ sử dụng ảnh mặc định.</div>
+                        </div>
+
+                        <!-- Danh mục món ăn -->
+                        <div class="mb-3">
+                            <label for="productCategoryId" class="form-label fw-semibold text-secondary">Danh mục</label>
+                            <select class="form-select rounded-3" id="productCategoryId">
+                                <option value="1">Mì Quảng</option>
+                                <option value="2">Món Ăn Kèm</option>
+                                <option value="3">Nước Uống</option>
+                            </select>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="mb-4">
+                            <label for="productDescription" class="form-label fw-semibold text-secondary">Mô tả món ăn</label>
+                            <textarea class="form-control rounded-3" id="productDescription" rows="4" placeholder="Nhập mô tả hương vị, nguyên liệu, cách dùng..."></textarea>
+                        </div>
+
+                        <!-- Các nút hành động -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="btnSubmit" class="btn btn-primary rounded-pill py-2 text-white shadow-sm fw-bold">
+                                <i class="bi bi-send-fill me-1"></i> Gửi Request (POST)
+                            </button>
+                            <button type="button" id="btnCancel" class="btn btn-outline-secondary rounded-pill py-2 d-none" onclick="resetForm()">
+                                Hủy chỉnh sửa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Phải: Danh sách sản phẩm thời gian thực -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-list-stars text-primary me-2"></i> Danh Sách Sản Phẩm (API Response)
+                    </h5>
+                    <button class="btn btn-light btn-sm border rounded-pill px-3 mt-2 mt-sm-0" onclick="loadProducts()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Tải lại danh sách
+                    </button>
+                </div>
+
+                <!-- Bảng danh sách hiển thị thời gian thực -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">Mã (ID)</th>
+                                <th style="width: 100px;">Hình ảnh</th>
+                                <th>Thông tin sản phẩm</th>
+                                <th class="text-end" style="width: 150px;">Giá bán</th>
+                                <th class="text-center" style="width: 180px;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="apiProductList">
+                            <!-- Danh sách sản phẩm được render qua JavaScript -->
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="text-muted mt-2 mb-0">Đang tải dữ liệu từ API...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xem chi tiết sản phẩm -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-dark text-white rounded-top-4 p-3">
+                <h5 class="modal-title fw-bold" id="detailModalLabel">Chi tiết sản phẩm (GET API)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="detailModalBody">
+                <!-- Nội dung được nạp qua AJAX -->
+            </div>
+            <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const API_URL = '/api/products';
+        let detailModal;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+            loadProducts();
+        });
+
+        // Tải danh sách sản phẩm qua GET /api/products
+        async function loadProducts() {
+            const listContainer = document.getElementById('apiProductList');
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Không thể tải danh sách sản phẩm');
+                const products = await response.json();
+                
+                listContainer.innerHTML = '';
+                if (products.length === 0) {
+                    listContainer.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="bi bi-inbox text-muted display-4"></i>
+                                <p class="text-muted mt-2">Không có sản phẩm nào trong cơ sở dữ liệu.</p>
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                products.forEach(p => {
+                    const row = document.createElement('tr');
+                    const imgUrl = p.imageUrl || '/images/no-image.jpg';
+                    const categoryName = p.categoryId === 1 ? 'Mì Quảng' : p.categoryId === 2 ? 'Món Ăn Kèm' : 'Nước Uống';
+                    const categoryBadge = p.categoryId === 1 ? 'bg-primary' : p.categoryId === 2 ? 'bg-success' : 'bg-secondary';
+                    
+                    row.innerHTML = `
+                        <td class="fw-bold text-muted">#${p.id}</td>
+                        <td>
+                            <img src="${imgUrl}" class="img-thumbnail rounded-3 shadow-sm" style="width: 65px; height: 65px; object-fit: cover;" onerror="this.src='/images/no-image.png'" />
+                        </td>
+                        <td>
+                            <h6 class="fw-bold text-dark mb-1">${p.name}</h6>
+                            <span class="badge ${categoryBadge} rounded-pill fs-7 py-1 px-2">${categoryName}</span>
+                            <p class="text-muted text-truncate-2 mb-0 small mt-1" style="max-width: 280px;">${p.description || 'Chưa có mô tả'}</p>
+                        </td>
+                        <td class="text-end fw-bold text-primary fs-6">${p.price.toLocaleString('vi-VN')} đ</td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn btn-outline-info btn-sm rounded-circle" onclick="viewDetail(${p.id})" title="Xem chi tiết (GET)"><i class="bi bi-eye-fill"></i></button>
+                                <button class="btn btn-outline-warning btn-sm rounded-circle" onclick="editProduct(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Chỉnh sửa (PUT)"><i class="bi bi-pencil-fill"></i></button>
+                                <button class="btn btn-outline-danger btn-sm rounded-circle" onclick="deleteProduct(${p.id})" title="Xóa (DELETE)"><i class="bi bi-trash-fill"></i></button>
+                            </div>
+                        </td>
+                    `;
+                    listContainer.appendChild(row);
+                });
+            } catch (error) {
+                console.error(error);
+                listContainer.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-danger">
+                            <i class="bi bi-exclamation-octagon display-4"></i>
+                            <p class="mt-2 fw-semibold">Đã xảy ra lỗi khi gọi RESTful API.</p>
+                            <small class="text-muted">${error.message}</small>
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        // Xem chi tiết món ăn qua GET /api/products/{id}
+        async function viewDetail(id) {
+            const modalBody = document.getElementById('detailModalBody');
+            modalBody.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted mt-2 mb-0">Đang truy vấn API...</p>
+                </div>`;
+            detailModal.show();
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                if (!response.ok) throw new Error('Không thể lấy chi tiết món ăn');
+                const p = await response.json();
+                
+                const imgUrl = p.imageUrl || '/images/no-image.jpg';
+                const categoryName = p.categoryId === 1 ? 'Mì Quảng' : p.categoryId === 2 ? 'Món Ăn Kèm' : 'Nước Uống';
+
+                modalBody.innerHTML = `
+                    <div class="text-center mb-4">
+                        <img src="${imgUrl}" class="img-fluid rounded-4 shadow-sm mb-3" style="max-height: 250px; object-fit: cover;" onerror="this.src='/images/no-image.png'" />
+                        <h4 class="fw-bold text-dark mb-1">${p.name}</h4>
+                        <span class="badge bg-dark rounded-pill px-3 py-2 mt-1">${categoryName}</span>
+                    </div>
+                    <hr/>
+                    <div class="row g-3">
+                        <div class="col-4 fw-semibold text-secondary">Mã sản phẩm:</div>
+                        <div class="col-8 text-dark fw-bold">#${p.id}</div>
+                        
+                        <div class="col-4 fw-semibold text-secondary">Giá bán:</div>
+                        <div class="col-8 text-primary fw-bold fs-5">${p.price.toLocaleString('vi-VN')} đ</div>
+                        
+                        <div class="col-4 fw-semibold text-secondary">Mô tả chi tiết:</div>
+                        <div class="col-8 text-secondary" style="font-size: 0.95rem; line-height: 1.6;">${p.description || 'Chưa có mô tả cho sản phẩm này.'}</div>
+                    </div>
+                `;
+            } catch (error) {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger text-center py-4">
+                        <i class="bi bi-exclamation-circle-fill display-5 d-block mb-2"></i>
+                        <h5>Lỗi Truy Vấn API</h5>
+                        <p class="mb-0 small">${error.message}</p>
+                    </div>`;
+            }
+        }
+
+        // Lưu sản phẩm (Gồm thêm mới POST hoặc sửa PUT)
+        async function saveProduct() {
+            const id = document.getElementById('productId').value;
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const imageUrl = document.getElementById('productImageUrl').value;
+            const categoryId = parseInt(document.getElementById('productCategoryId').value);
+            const description = document.getElementById('productDescription').value;
+
+            const productData = {
+                name,
+                price,
+                imageUrl,
+                categoryId,
+                description
+            };
+
+            const submitBtn = document.getElementById('btnSubmit');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang gửi request...`;
+
+            try {
+                let response;
+                if (id) {
+                    // Cập nhật sản phẩm qua PUT /api/products/{id}
+                    productData.id = parseInt(id);
+                    response = await fetch(`${API_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(productData)
+                    });
+                } else {
+                    // Thêm sản phẩm qua POST /api/products
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(productData)
+                    });
+                }
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || 'Thao tác thất bại');
+                }
+
+                // Thành công
+                alert(id ? 'Cập nhật sản phẩm thành công!' : 'Thêm sản phẩm mới thành công!');
+                resetForm();
+                loadProducts();
+            } catch (error) {
+                console.error(error);
+                alert(`Lỗi: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = id ? `<i class="bi bi-send-fill me-1"></i> Gửi Request (PUT)` : `<i class="bi bi-send-fill me-1"></i> Gửi Request (POST)`;
+            }
+        }
+
+        // Tải thông tin sản phẩm lên Form để Sửa (PUT)
+        function editProduct(p) {
+            document.getElementById('productId').value = p.id;
+            document.getElementById('productName').value = p.name;
+            document.getElementById('productPrice').value = p.price;
+            document.getElementById('productImageUrl').value = p.imageUrl || '';
+            document.getElementById('productCategoryId').value = p.categoryId;
+            document.getElementById('productDescription').value = p.description || '';
+
+            document.getElementById('formTitle').innerHTML = `<i class="bi bi-pencil-square text-warning me-2"></i> Chỉnh Sửa Món Ăn #${p.id}`;
+            const submitBtn = document.getElementById('btnSubmit');
+            submitBtn.className = 'btn btn-warning rounded-pill py-2 text-dark shadow-sm fw-bold';
+            submitBtn.innerHTML = `<i class="bi bi-send-fill me-1"></i> Gửi Request (PUT)`;
+            
+            document.getElementById('btnCancel').classList.remove('d-none');
+            // Scroll mượt lên đầu form
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Xóa món ăn qua DELETE /api/products/{id}
+        async function deleteProduct(id) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa món ăn #${id}? Thao tác này sẽ gửi HTTP DELETE request đến API.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || 'Không thể xóa món ăn');
+                }
+
+                alert('Xóa món ăn thành công!');
+                loadProducts();
+            } catch (error) {
+                console.error(error);
+                alert(`Lỗi khi xóa: ${error.message}`);
+            }
+        }
+
+        // Reset Form về chế độ Thêm mới (POST)
+        function resetForm() {
+            document.getElementById('productId').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productImageUrl').value = '';
+            document.getElementById('productCategoryId').value = '1';
+            document.getElementById('productDescription').value = '';
+
+            document.getElementById('formTitle').innerHTML = `<i class="bi bi-plus-circle-fill me-2"></i> Thêm Món Ăn Mới`;
+            const submitBtn = document.getElementById('btnSubmit');
+            submitBtn.className = 'btn btn-primary rounded-pill py-2 text-white shadow-sm fw-bold';
+            submitBtn.innerHTML = `<i class="bi bi-send-fill me-1"></i> Gửi Request (POST)`;
+            
+            document.getElementById('btnCancel').classList.add('d-none');
+        }
+    </script>
+}

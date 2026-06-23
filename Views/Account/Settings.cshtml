@@ -1,0 +1,97 @@
+﻿@model GIUA_KY_WEB_3AE.Models.AccountSettingsViewModel
+
+@{
+    ViewData["Title"] = "Cài đặt tài khoản";
+}
+
+<div class="container my-5 py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Product" asp-action="Index" class="text-decoration-none text-muted">Trang chủ</a></li>
+                    <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Cài đặt tài khoản</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <!-- Header card -->
+                <div class="card-header bg-dark text-white p-4 border-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-25 p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                            <i class="bi bi-person-gear text-primary fs-3"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">Thông tin cá nhân</h4>
+                            <p class="text-white-50 small mb-0">Cập nhật thông tin giao hàng mặc định của bạn</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form body -->
+                <div class="card-body p-4 p-md-5">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show rounded-3 border-0 d-flex align-items-center shadow-2xs mb-4" role="alert">
+                            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                            <div>
+                                @Html.Raw(TempData["SuccessMessage"])
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Settings" method="post" class="needs-validation">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-4"></div>
+
+                        <!-- 1. Họ và Tên -->
+                        <div class="mb-4">
+                            <label asp-for="FullName" class="form-label fw-bold text-secondary small">Họ và tên của bạn</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-light-subtle px-3 text-secondary"><i class="bi bi-person-fill"></i></span>
+                                <input asp-for="FullName" class="form-control rounded-end-3 border-light-subtle px-3 py-2.5 bg-light bg-opacity-50" placeholder="Nhập họ và tên đầy đủ..." />
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <!-- 2. Số điện thoại -->
+                        <div class="mb-4">
+                            <label asp-for="Phone" class="form-label fw-bold text-secondary small">Số điện thoại liên hệ</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-light-subtle px-3 text-secondary"><i class="bi bi-telephone-fill"></i></span>
+                                <input asp-for="Phone" class="form-control rounded-end-3 border-light-subtle px-3 py-2.5 bg-light bg-opacity-50" placeholder="Nhập số điện thoại của bạn..." />
+                            </div>
+                            <span asp-validation-for="Phone" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <!-- 3. Địa chỉ -->
+                        <div class="mb-4">
+                            <label asp-for="Address" class="form-label fw-bold text-secondary small">Địa chỉ liên hệ & giao hàng</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-light-subtle px-3 text-secondary align-items-start pt-2.5"><i class="bi bi-geo-alt-fill"></i></span>
+                                <textarea asp-for="Address" class="form-control rounded-end-3 border-light-subtle px-3 py-2 bg-light bg-opacity-50" rows="3" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."></textarea>
+                            </div>
+                            <span asp-validation-for="Address" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <!-- Nút hành động -->
+                        <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
+                            <a asp-controller="Product" asp-action="Index" class="btn btn-link text-decoration-none text-muted fw-bold">
+                                <i class="bi bi-arrow-left me-1"></i> Quay về cửa hàng
+                            </a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 py-2.5 text-white fw-bold shadow-sm hover-btn">
+                                <i class="bi bi-save me-1.5"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

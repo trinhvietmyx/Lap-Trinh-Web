@@ -1,0 +1,349 @@
+@model IEnumerable<GIUA_KY_WEB_3AE.Models.Product>
+
+@{
+    ViewData["Title"] = "Mì 3AE - Món đặc sắc";
+    var products = Model?.Where(p => !string.IsNullOrWhiteSpace(p.Name)).ToList() ?? new List<GIUA_KY_WEB_3AE.Models.Product>();
+    var featuredProducts = products.Take(4).ToList();
+    var heroProduct = featuredProducts.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.ImageUrl)) ?? featuredProducts.FirstOrDefault();
+    var heroImage = !string.IsNullOrWhiteSpace(heroProduct?.ImageUrl) ? heroProduct.ImageUrl : "/images/7e8c8541-1a66-4e89-858e-30850971117b_mia.png";
+}
+
+<section class="home-hero" style="background-image: linear-gradient(90deg, rgba(37, 22, 16, 0.96) 0%, rgba(37, 22, 16, 0.88) 34%, rgba(37, 22, 16, 0.45) 62%, rgba(37, 22, 16, 0.18) 100%), url('@heroImage');">
+    <div class="container home-hero-content">
+        <p class="home-kicker">Mì Quảng gia truyền</p>
+        <h1>Mì 3AE</h1>
+        <p class="home-lead">Tô mì nóng, nước dùng đậm vị, rau sống giòn và những phần topping được chọn sẵn cho bữa ăn thật đã.</p>
+        <div class="home-actions">
+            <a asp-controller="Product" asp-action="Index" class="btn btn-primary btn-lg rounded-pill px-4 text-white shadow-sm">
+                <i class="bi bi-grid-fill me-2"></i> Xem thực đơn
+            </a>
+            @if (heroProduct != null)
+            {
+                <a asp-controller="Product" asp-action="Display" asp-route-id="@heroProduct.Id" class="btn btn-light btn-lg rounded-pill px-4 fw-bold">
+                    <i class="bi bi-stars me-2 text-primary"></i> Món nổi bật
+                </a>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="featured-section">
+    <div class="container">
+        <div class="featured-heading">
+            <div>
+                <p class="home-kicker text-primary mb-2">Đặc sắc hôm nay</p>
+                <h2>Những món nên thử trước</h2>
+            </div>
+            <a asp-controller="Product" asp-action="Index" class="featured-menu-link">
+                Xem tất cả <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        @if (!featuredProducts.Any())
+        {
+            <div class="empty-featured">
+                <i class="bi bi-bowl-hot"></i>
+                <h3>Chưa có món đặc sắc</h3>
+                <p>Khi có món trong thực đơn, trang chủ sẽ tự hiển thị tại đây.</p>
+            </div>
+        }
+        else
+        {
+            <div class="featured-grid">
+                @foreach (var item in featuredProducts)
+                {
+                    <article class="featured-dish">
+                        <a asp-controller="Product" asp-action="Display" asp-route-id="@item.Id" class="featured-image-link">
+                            <img src="@item.ImageUrl" alt="@item.Name" />
+                        </a>
+                        <div class="featured-dish-body">
+                            <div>
+                                <h3>
+                                    <a asp-controller="Product" asp-action="Display" asp-route-id="@item.Id">@item.Name</a>
+                                </h3>
+                                <p>@item.Description</p>
+                            </div>
+                            <div class="featured-dish-footer">
+                                <strong>@item.Price.ToString("#,##0") đ</strong>
+                                <a asp-controller="Product" asp-action="Display" asp-route-id="@item.Id" aria-label="Xem chi tiết @item.Name">
+                                    <i class="bi bi-arrow-up-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+
+
+@section Scripts {
+    <style>
+        .home-hero {
+            min-height: calc(100svh - 90px);
+            background-position: center;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            color: #fff;
+            margin-top: -1px;
+            overflow: hidden;
+        }
+
+        .home-hero-content {
+            padding-top: clamp(56px, 8vw, 104px);
+            padding-bottom: clamp(56px, 8vw, 104px);
+            animation: homeHeroIn 650ms ease both;
+        }
+
+        .home-kicker {
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.85rem;
+        }
+
+        .home-hero h1 {
+            font-size: clamp(3.3rem, 9vw, 7.8rem);
+            font-weight: 800;
+            line-height: 0.95;
+            margin-bottom: 1.2rem;
+            letter-spacing: 0;
+        }
+
+        .home-lead {
+            max-width: 560px;
+            font-size: clamp(1.05rem, 2vw, 1.35rem);
+            line-height: 1.65;
+            color: rgba(255, 255, 255, 0.88);
+            margin-bottom: 2rem;
+        }
+
+        .home-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .featured-section {
+            padding: clamp(56px, 8vw, 96px) 0;
+            background: #fffaf5;
+        }
+
+        .featured-heading,
+        .home-cta-inner {
+            display: flex;
+            justify-content: space-between;
+            gap: 1.5rem;
+            align-items: end;
+            margin-bottom: 2rem;
+        }
+
+        .featured-heading h2,
+        .home-cta h2 {
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            font-weight: 800;
+            color: #2f1c17;
+            margin: 0;
+            letter-spacing: 0;
+        }
+
+        .featured-menu-link {
+            color: var(--primary-color);
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .featured-menu-link:hover {
+            color: var(--primary-hover);
+            transform: translateX(4px);
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.2rem;
+        }
+
+        .featured-dish {
+            background: #fff;
+            border: 1px solid rgba(62, 39, 35, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 100%;
+            box-shadow: 0 18px 40px rgba(62, 39, 35, 0.08);
+            transition: transform 0.24s ease, box-shadow 0.24s ease;
+            animation: dishIn 520ms ease both;
+        }
+
+        .featured-dish:nth-child(2) { animation-delay: 80ms; }
+        .featured-dish:nth-child(3) { animation-delay: 160ms; }
+        .featured-dish:nth-child(4) { animation-delay: 240ms; }
+
+        .featured-dish:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 24px 55px rgba(62, 39, 35, 0.14);
+        }
+
+        .featured-image-link {
+            display: block;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            background: #f3e4d8;
+        }
+
+        .featured-image-link img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.45s ease;
+        }
+
+        .featured-dish:hover img {
+            transform: scale(1.06);
+        }
+
+        .featured-dish-body {
+            min-height: 245px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .featured-dish h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 0.55rem;
+            line-height: 1.25;
+        }
+
+        .featured-dish h3 a {
+            color: #2f1c17;
+            text-decoration: none;
+        }
+
+        .featured-dish p {
+            color: #6d554f;
+            line-height: 1.55;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .featured-dish-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(62, 39, 35, 0.08);
+        }
+
+        .featured-dish-footer strong {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .featured-dish-footer a {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #fff;
+            background: var(--primary-color);
+            text-decoration: none;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .featured-dish-footer a:hover {
+            background: var(--primary-hover);
+            transform: rotate(8deg) scale(1.05);
+        }
+
+        .empty-featured {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #6d554f;
+        }
+
+        .empty-featured i {
+            font-size: 3rem;
+            color: var(--primary-color);
+        }
+
+        .home-cta {
+            padding: clamp(48px, 7vw, 78px) 0;
+            background: #f6eadf;
+        }
+
+        .home-cta-inner {
+            margin-bottom: 0;
+            align-items: center;
+        }
+
+        @@keyframes homeHeroIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes dishIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (max-width: 1199px) {
+            .featured-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 767px) {
+            .home-hero {
+                min-height: auto;
+            }
+
+            .featured-heading,
+            .home-cta-inner {
+                display: block;
+            }
+
+            .featured-menu-link,
+            .home-cta .btn {
+                margin-top: 1rem;
+            }
+
+            .featured-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .featured-dish-body {
+                min-height: 210px;
+            }
+        }
+    </style>
+}

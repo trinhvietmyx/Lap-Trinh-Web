@@ -1,0 +1,234 @@
+@model IEnumerable<GIUA_KY_WEB_3AE.Models.Order>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng - Admin";
+}
+
+<div class="container my-5" style="margin-top: 100px !important;">
+    <!-- Breadcrumb điều hướng -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Product" asp-action="Index" class="text-decoration-none text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Quản lý Đơn hàng</li>
+        </ol>
+    </nav>
+
+    <!-- Tiêu đề trang quản lý -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap">
+        <div>
+            <h1 class="fw-bold mb-1 d-flex align-items-center">
+                <i class="bi bi-clipboard2-data-fill text-primary me-3"></i> Quản lý Đơn hàng
+            </h1>
+            <p class="text-muted mb-0">Xem danh sách, kiểm tra thông tin và duyệt trạng thái đơn hàng của hệ thống.</p>
+        </div>
+        <div class="mt-3 mt-lg-0">
+            <span class="badge bg-light text-dark border p-2 px-3 rounded-pill fw-semibold shadow-sm">
+                <i class="bi bi-box-seam me-1 text-primary"></i> Tổng số đơn hàng: @Model.Count()
+            </span>
+        </div>
+    </div>
+
+    <!-- Hiển thị thông báo (nếu có) -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm py-3 px-4 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill fs-4 text-success me-3"></i>
+                <div>
+                    <strong class="d-block">Thành công!</strong>
+                    <span>@TempData["SuccessMessage"]</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-4 shadow-sm py-3 px-4 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-4 text-danger me-3"></i>
+                <div>
+                    <strong class="d-block">Thất bại!</strong>
+                    <span>@TempData["ErrorMessage"]</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Bảng danh sách đơn hàng -->
+    <div class="card border-0 rounded-4 shadow-sm overflow-hidden mb-5">
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-x text-muted" style="font-size: 4rem;"></i>
+                    <p class="fs-5 text-muted mt-3 fw-medium">Chưa có đơn hàng nào được ghi nhận trên hệ thống.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="min-width: 1000px;">
+                        <thead class="table-light py-3 border-bottom">
+                            <tr>
+                                <th class="ps-4 py-3 text-uppercase text-muted fw-semibold" style="font-size: 0.8rem; width: 8%;">Mã ĐH</th>
+                                <th class="py-3 text-uppercase text-muted fw-semibold" style="font-size: 0.8rem; width: 18%;">Khách hàng</th>
+                                <th class="py-3 text-uppercase text-muted fw-semibold" style="font-size: 0.8rem; width: 12%;">Số điện thoại</th>
+                                <th class="py-3 text-uppercase text-muted fw-semibold" style="font-size: 0.8rem; width: 15%;">Ngày đặt hàng</th>
+                                <th class="py-3 text-uppercase text-muted fw-semibold" style="font-size: 0.8rem; width: 15%;">Tổng tiền</th>
+                                <th class="py-3 text-uppercase text-muted fw-semibold" style="font-size: 0.8rem; width: 12%;">Trạng thái</th>
+                                <th class="pe-4 py-3 text-uppercase text-muted fw-semibold text-center" style="font-size: 0.8rem; width: 20%;">Hành động duyệt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <!-- Mã ĐH -->
+                                    <td class="ps-4">
+                                        <a asp-action="Details" asp-route-id="@order.Id" class="fw-bold text-primary text-decoration-none">
+                                            #@order.Id
+                                        </a>
+                                    </td>
+                                    <!-- Khách hàng -->
+                                    <td>
+                                        <div class="fw-semibold text-dark">@order.CustomerName</div>
+                                        <div class="text-muted small text-truncate" style="max-width: 200px;" title="@order.Address">
+                                            <i class="bi bi-geo-alt me-1"></i> @order.Address
+                                        </div>
+                                    </td>
+                                    <!-- Số điện thoại -->
+                                    <td class="text-dark">@order.Phone</td>
+                                    <!-- Ngày đặt hàng -->
+                                    <td class="text-muted">
+                                        <div>@order.OrderDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="small">@order.OrderDate.ToString("HH:mm")</div>
+                                    </td>
+                                    <!-- Tổng tiền -->
+                                    <td>
+                                        <span class="fw-bold text-dark">@order.TotalAmount.ToString("#,##0") ₫</span>
+                                    </td>
+                                    <!-- Trạng thái (Badge) -->
+                                    <td>
+                                        @switch (order.Status)
+                                        {
+                                            case "Pending":
+                                                <span class="badge rounded-pill bg-warning text-dark px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-clock-history me-1"></i> Chờ duyệt
+                                                </span>
+                                                break;
+                                            case "PendingPayment":
+                                                <span class="badge rounded-pill bg-info text-white px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-hourglass-split me-1"></i> Chờ xác nhận TT
+                                                </span>
+                                                break;
+                                            case "Confirmed":
+                                                <span class="badge rounded-pill bg-info text-white px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-check-circle me-1"></i> Đã xác nhận
+                                                </span>
+                                                break;
+                                            case "Shipped":
+                                                <span class="badge rounded-pill bg-primary text-white px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-truck me-1"></i> Đang giao
+                                                </span>
+                                                break;
+                                            case "Completed":
+                                                <span class="badge rounded-pill bg-success text-white px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-patch-check me-1"></i> Hoàn thành
+                                                </span>
+                                                break;
+                                            case "Cancelled":
+                                                <span class="badge rounded-pill bg-danger text-white px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-x-circle me-1"></i> Đã hủy
+                                                </span>
+                                                break;
+                                            default:
+                                                <span class="badge rounded-pill bg-secondary text-white px-3 py-2 fw-semibold" style="font-size: 0.75rem;">
+                                                    @order.Status
+                                                </span>
+                                                break;
+                                        }
+                                    </td>
+                                    <!-- Hành động duyệt nhanh -->
+                                    <td class="pe-4 text-center">
+                                        <div class="d-flex align-items-center justify-content-center gap-1 flex-wrap">
+                                            <!-- Xem chi tiết -->
+                                            <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-light btn-sm rounded-pill px-3 fw-medium border shadow-2xs" title="Xem chi tiết đơn hàng">
+                                                <i class="bi bi-eye"></i> Xem chi tiết
+                                            </a>
+
+                                            <!-- Các nút chuyển trạng thái -->
+                                            @if (order.Status == "Pending")
+                                            {
+                                                <form asp-area="Admin" asp-controller="Order" asp-action="UpdateStatus" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@order.Id" />
+                                                    <input type="hidden" name="status" value="Confirmed" />
+                                                    <button type="submit" class="btn btn-outline-info btn-sm rounded-pill px-3 fw-medium">
+                                                        <i class="bi bi-check-lg"></i> Xác nhận
+                                                    </button>
+                                                </form>
+
+                                                <form asp-area="Admin" asp-controller="Order" asp-action="UpdateStatus" method="post" class="d-inline" onsubmit="return promptCancelOrder(this)">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@order.Id" />
+                                                    <input type="hidden" name="status" value="Cancelled" />
+                                                    <input type="hidden" name="cancellationReason" value="" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
+                                                        <i class="bi bi-x-lg"></i> Hủy đơn
+                                                    </button>
+                                                </form>
+                                            }
+                                            else if (order.Status == "Confirmed")
+                                            {
+                                                <form asp-area="Admin" asp-controller="Order" asp-action="UpdateStatus" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@order.Id" />
+                                                    <input type="hidden" name="status" value="Shipped" />
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-medium">
+                                                        <i class="bi bi-truck"></i> Giao hàng
+                                                    </button>
+                                                </form>
+                                            }
+                                            else if (order.Status == "Shipped")
+                                            {
+                                                <form asp-area="Admin" asp-controller="Order" asp-action="UpdateStatus" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@order.Id" />
+                                                    <input type="hidden" name="status" value="Completed" />
+                                                    <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-medium">
+                                                        <i class="bi bi-patch-check"></i> Hoàn thành
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Hàm hiển thị hộp thoại prompt yêu cầu Admin nhập lý do hủy đơn hàng
+        function promptCancelOrder(form) {
+            var reason = prompt("Vui lòng nhập lý do hủy đơn hàng này:");
+            if (reason === null) {
+                return false; // Hủy bỏ thao tác submit
+            }
+            reason = reason.trim();
+            if (reason === "") {
+                alert("Vui lòng nhập lý do hủy đơn hàng để tiếp tục!");
+                return false;
+            }
+            form.querySelector('input[name="cancellationReason"]').value = reason;
+            return true;
+        }
+    </script>
+}

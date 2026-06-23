@@ -1,0 +1,91 @@
+﻿@model IEnumerable<GIUA_KY_WEB_3AE.Models.Category>
+
+@{
+    ViewData["Title"] = "Quản lý danh mục";
+}
+
+<div class="container my-5">
+    <!-- Tiêu đề & Nút thêm mới -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Quản lý danh mục</h1>
+            <p class="text-muted mb-0">Danh sách các danh mục sản phẩm của hệ thống</p>
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Add" class="btn btn-primary px-4 rounded-pill shadow-sm align-self-start align-self-md-center">
+                <i class="bi bi-plus-circle me-1"></i> Thêm danh mục
+            </a>
+        }
+    </div>
+
+    <!-- Bảng danh sách danh mục -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-secondary fw-semibold text-uppercase fs-7" style="width: 15%">Mã danh mục</th>
+                        <th class="py-3 text-secondary fw-semibold text-uppercase fs-7">Tên danh mục</th>
+                        <th class="pe-4 py-3 text-end text-secondary fw-semibold text-uppercase fs-7" style="width: 25%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var category in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-medium text-secondary">#@category.Id</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-tag rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-tag-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">@category.Name</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a asp-action="Display" asp-route-id="@category.Id" class="btn btn-sm btn-outline-info rounded-pill px-3 fs-7" title="Xem chi tiết">
+                                            <i class="bi bi-eye me-1"></i> Xem
+                                        </a>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <a asp-action="Update" asp-route-id="@category.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7" title="Chỉnh sửa">
+                                                <i class="bi bi-pencil me-1"></i> Sửa
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-sm btn-outline-danger rounded-pill px-3 fs-7" title="Xóa danh mục">
+                                                <i class="bi bi-trash me-1"></i> Xóa
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">
+                                <i class="bi bi-folder-x display-4 d-block mb-3 text-secondary"></i>
+                                <span>Chưa có danh mục sản phẩm nào trong cơ sở dữ liệu.</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fs-7 {
+        font-size: 0.85rem;
+    }
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.5rem;
+    }
+</style>

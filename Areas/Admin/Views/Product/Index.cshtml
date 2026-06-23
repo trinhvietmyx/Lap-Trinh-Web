@@ -1,0 +1,97 @@
+@model IEnumerable<GIUA_KY_WEB_3AE.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý thực đơn - Mì 3AE Admin";
+    var categories = ViewBag.Categories as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h1 class="display-6 fw-bold text-dark mb-1"><i class="bi bi-egg-fried text-primary"></i> Quản lý thực đơn</h1>
+            <p class="text-muted mb-0">Hệ thống quản trị thực đơn và món ăn của Mì 3AE</p>
+        </div>
+        <a asp-area="Admin" asp-controller="Product" asp-action="Add" class="btn btn-primary shadow-sm rounded-pill px-4 py-2 text-white">
+            <i class="bi bi-plus-circle-fill me-2"></i> Thêm món ăn mới
+        </a>
+    </div>
+
+    <!-- Bảng món ăn -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary uppercase fs-7 fw-semibold border-bottom">
+                        <tr>
+                            <th scope="col" class="ps-4 py-3" style="width: 80px;">Hình ảnh</th>
+                            <th scope="col" class="py-3">Tên món ăn</th>
+                            <th scope="col" class="py-3">Danh mục</th>
+                            <th scope="col" class="py-3" style="width: 150px;">Đơn giá</th>
+                            <th scope="col" class="py-3 text-center" style="width: 180px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox display-4 mb-3 d-block text-secondary"></i>
+                                    Thực đơn đang trống. Hãy bấm "Thêm món ăn mới" để bắt đầu.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="rounded-3 overflow-hidden border bg-white" style="width: 60px; height: 60px;">
+                                            <img src="@item.ImageUrl" alt="@item.Name" class="w-100 h-100" style="object-fit: cover;" />
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="fw-bold text-dark">@item.Name</div>
+                                        <div class="text-secondary text-truncate-2 fs-7" style="max-width: 400px;" title="@item.Description">
+                                            @item.Description
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2 rounded-pill">
+                                            @(categories.ContainsKey(item.CategoryId) ? categories[item.CategoryId] : "Khác")
+                                        </span>
+                                    </td>
+                                    <td class="py-3 fw-bold text-primary">
+                                        @item.Price.ToString("#,##0") đ
+                                    </td>
+                                    <td class="py-3 text-center pe-4">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                                                <i class="bi bi-pencil-square"></i> Sửa
+                                            </a>
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fs-7 {
+        font-size: 0.85rem;
+    }
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>

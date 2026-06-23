@@ -1,0 +1,53 @@
+﻿@model GIUA_KY_WEB_3AE.Models.Category
+
+@{
+    ViewData["Title"] = "Chi tiết danh mục - " + Model.Name;
+}
+
+<div class="container my-5" style="max-width: 600px;">
+    <!-- Nút quay lại -->
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none text-secondary d-inline-flex align-items-center">
+            <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- Card Chi tiết -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white p-5">
+        <div class="border-bottom pb-3 mb-4 text-center">
+            <div class="avatar-tag rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                <i class="bi bi-tag-fill display-6"></i>
+            </div>
+            <h1 class="h3 fw-bold text-dark mb-1">Chi tiết danh mục</h1>
+            <p class="text-muted mb-0">Xem thông tin định danh của danh mục</p>
+        </div>
+
+        <div class="mb-4">
+            <div class="row py-2 border-bottom">
+                <div class="col-sm-4 text-muted fw-medium">Mã danh mục:</div>
+                <div class="col-sm-8 text-dark fw-bold">#@Model.Id</div>
+            </div>
+            <div class="row py-2 border-bottom">
+                <div class="col-sm-4 text-muted fw-medium">Tên danh mục:</div>
+                <div class="col-sm-8 text-dark fw-bold">@Model.Name</div>
+            </div>
+        </div>
+
+        <!-- Các nút chức năng quản trị -->
+        <div class="d-flex justify-content-center gap-3 border-top pt-4">
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger rounded-pill px-4">
+                    <i class="bi bi-trash me-1"></i> Xóa
+                </a>
+            }
+            else
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Quay lại</a>
+            }
+        </div>
+    </div>
+</div>

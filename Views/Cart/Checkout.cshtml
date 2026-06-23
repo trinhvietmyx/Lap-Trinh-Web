@@ -1,0 +1,1738 @@
+@model GIUA_KY_WEB_3AE.Models.CheckoutViewModel
+@using Microsoft.AspNetCore.Identity
+@using GIUA_KY_WEB_3AE.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    ViewData["Title"] = "Thanh toán đơn hàng - Mì 3AE";
+
+    // Đọc cấu hình ngân hàng VietQR từ appsettings.json để truyền xuống JS
+    var vietqrBankId = Configuration["VietQR:BankId"] ?? "vietinbank";
+    var vietqrAccountNo = Configuration["VietQR:AccountNo"] ?? "113366668888";
+    var vietqrAccountName = Configuration["VietQR:AccountName"] ?? "QUAN MI QUANG 3AE";
+    var vietqrTemplate = Configuration["VietQR:Template"] ?? "compact2";
+}
+
+<!-- CSS Tùy biến cho trang Checkout mang phong cách Thế Giới Di Động Premium -->
+<style>
+    body {
+        background-color: #FFF8F0;
+    }
+    .checkout-container {
+        max-width: 960px;
+        margin: 100px auto 50px auto !important;
+    }
+    .card-custom {
+        border: none;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(62, 39, 35, 0.04);
+        margin-bottom: 20px;
+    }
+    .top-tab {
+        border-radius: 10px;
+        background-color: #FFF5EB;
+        padding: 4px;
+    }
+    .top-tab .nav-link {
+        border-radius: 8px;
+        color: #5d4037;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 8px 16px;
+        transition: all 0.2s ease;
+        border: none;
+        background: none;
+        width: 50%;
+        text-align: center;
+    }
+    .top-tab .nav-link.active {
+        background-color: #ffffff;
+        color: #D2691E;
+        box-shadow: 0 2px 8px rgba(210, 105, 30, 0.08);
+    }
+    .address-display-box {
+        border: 1px dashed #D2691E;
+        background-color: rgba(210, 105, 30, 0.03);
+        border-radius: 12px;
+        padding: 16px;
+    }
+    .product-row {
+        position: relative;
+        padding: 16px 0;
+        border-bottom: 1px solid #f1f1f4;
+    }
+    .product-row:last-child {
+        border-bottom: none;
+    }
+    .flashsale-badge {
+        background: linear-gradient(135deg, #ff4d4f, #f5222d);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+    .promo-box {
+        border: 1px solid #e8e8e8;
+        border-radius: 10px;
+        padding: 12px;
+        background-color: #fafafa;
+    }
+    .promo-option {
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+    .promo-option:hover {
+        background-color: #f0f0f0;
+    }
+    .quantity-control .btn {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid #d9d9d9;
+        background: #fff;
+        color: #555;
+    }
+    .quantity-control input {
+        width: 35px;
+        text-align: center;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+    }
+    .special-request-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #f9f9f9;
+    }
+    .special-request-item:last-child {
+        border-bottom: none;
+    }
+    /* Toggle Switch Custom */
+    .form-switch .form-check-input {
+        width: 2.5em;
+        height: 1.25em;
+        cursor: pointer;
+    }
+    .payment-method-card {
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+    }
+    .payment-method-card:hover {
+        border-color: #D2691E;
+        background-color: rgba(210, 105, 30, 0.01);
+    }
+    .payment-method-card.selected {
+        border-color: #D2691E;
+        background-color: rgba(210, 105, 30, 0.03);
+        box-shadow: 0 0 0 1px #D2691E;
+    }
+    .dashed-btn {
+        border: 1px dashed #d9d9d9;
+        background: transparent;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+        color: #555;
+        transition: all 0.2s;
+        width: 100%;
+        text-align: center;
+    }
+    .dashed-btn:hover {
+        border-color: #D2691E;
+        color: #D2691E;
+        background-color: rgba(210, 105, 30, 0.02);
+    }
+    /* Giao diện Modal */
+    .delivery-tab-btn {
+        border: 1px solid #d9d9d9;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex: 1;
+    }
+    .delivery-tab-btn.active {
+        border-color: #D2691E;
+        color: #D2691E;
+        background-color: rgba(210, 105, 30, 0.04);
+        font-weight: 600;
+    }
+    .login-cta-banner {
+        background: linear-gradient(135deg, #fff7e6, #ffe7ba);
+        border: 1px solid #ffd591;
+        border-radius: 12px;
+        padding: 12px 16px;
+    }
+</style>
+
+<div class="container checkout-container">
+    <form asp-action="Checkout" method="post" id="checkoutForm">
+        @Html.AntiForgeryToken()
+        
+        <!-- Các trường inputs ẩn để lưu trữ thông tin thực tế được submit lên server -->
+        <input type="hidden" id="hiddenCustomerName" name="CustomerName" value="@Model.CustomerName" />
+        <input type="hidden" id="hiddenPhone" name="Phone" value="@Model.Phone" />
+        <input type="hidden" id="hiddenAddress" name="Address" value="@Model.Address" />
+        <input type="hidden" id="hiddenNotes" name="Notes" value="@Model.Notes" />
+        <input type="hidden" id="hiddenDeliveryMethod" name="DeliveryMethod" value="Giao tận nơi" />
+        <input type="hidden" id="shippingFeeInput" name="ShippingFee" value="0" />
+        <input type="hidden" id="shippingFeeOriginal" value="0" />
+        <input type="hidden" id="hiddenPaymentMethod" name="PaymentMethod" value="COD" />
+        <input type="hidden" id="hiddenUseMemberPoints" name="UseMemberPoints" value="false" />
+        <input type="hidden" id="customerLat" value="" />
+        <input type="hidden" id="customerLng" value="" />
+
+        @for (int i = 0; i < Model.SelectedIds.Count; i++)
+        {
+            <input type="hidden" name="SelectedIds[@i]" value="@Model.SelectedIds[i]" />
+        }
+
+        <div class="row">
+            <!-- CỘT TRÁI (60%): Chi tiết Đơn hàng & Tùy chọn -->
+            <div class="col-lg-7 mb-4">
+                <!-- 1. Tab Phương thức nhận hàng -->
+                <div class="card card-custom p-3">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-truck me-2 text-primary"></i>1. Phương thức nhận hàng</h6>
+                    <div class="top-tab d-flex">
+                        <button type="button" class="nav-link active" id="tabGiaoTanNoiBtn" onclick="switchDeliveryTab('Giao tận nơi')">
+                            <i class="bi bi-geo-alt-fill me-1"></i> Giao tận nơi
+                        </button>
+                        <button type="button" class="nav-link" id="tabNhanTaiSieuThiBtn" onclick="switchDeliveryTab('Ăn tại quán')">
+                            <i class="bi bi-shop me-1"></i> Ăn tại quán
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Khối thông tin món ăn -->
+                <div class="card card-custom p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>2. Thông tin phần ăn</h6>
+                        <span class="flashsale-badge shadow-2xs">
+                            <i class="bi bi-lightning-charge-fill text-warning me-1"></i>
+                            Khuyến mãi giờ vàng kết thúc sau: <span id="countdownTimer">13:45:51</span>
+                        </span>
+                    </div>
+
+                    <div class="checkout-product-list">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            <div class="product-row d-flex flex-column gap-3" data-product-id="@item.ProductId" data-price="@item.Price">
+                                <div class="d-flex align-items-start">
+                                    <!-- Ảnh món ăn -->
+                                    <img src="@item.ImageUrl" class="rounded-3 me-3 border" style="width: 75px; height: 75px; object-fit: cover;" alt="@item.Name" />
+                                    
+                                    <div class="flex-grow-1">
+                                        <!-- Tên món ăn -->
+                                        <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">@item.Name</h6>
+                                        <!-- Thuộc tính giả định -->
+                                        <div class="text-secondary small mb-2"><i class="bi bi-palette me-1"></i>Ghi chú: Sợi mì Quảng</div>
+                                        
+                                        <!-- Giá món ăn -->
+                                        <div class="d-flex align-items-baseline gap-2">
+                                            <span class="fw-bold text-danger fs-5" id="priceDisplay-@item.ProductId">@item.Price.ToString("#,##0")đ</span>
+                                            <span class="text-decoration-line-through text-muted small">@((item.Price * 1.15m).ToString("#,##0"))đ</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Thao tác xóa & tăng giảm số lượng -->
+                                    <div class="d-flex flex-column align-items-end justify-content-between h-100 ms-2">
+                                        <button type="button" class="btn btn-link text-danger p-0 border-0 mb-3 text-decoration-none small fw-semibold" onclick="deleteProduct(@item.ProductId)">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                        
+                                        <!-- Tăng giảm số lượng -->
+                                        <div class="quantity-control d-flex align-items-center">
+                                            <button type="button" class="btn" onclick="updateQty(@item.ProductId, -1)">-</button>
+                                            <input type="text" id="qty-@item.ProductId" value="@item.Quantity" readonly />
+                                            <button type="button" class="btn" onclick="updateQty(@item.ProductId, 1)">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chọn 1 trong 2 Khuyến mãi -->
+                                <div class="promo-box">
+                                    <div class="small fw-bold text-secondary mb-2"><i class="bi bi-gift-fill text-danger me-1"></i>Chọn 1 trong 2 khuyến mãi:</div>
+                                    <div class="d-flex flex-column gap-1">
+                                        <label class="promo-option d-flex align-items-center gap-2 mb-0">
+                                            <input type="radio" name="Promo-@item.ProductId" class="form-check-input mt-0" checked onclick="calculateTotals()" />
+                                            <span class="small text-dark">Tặng kèm bánh tráng nướng mè đen Đại Lộc giòn rụm</span>
+                                        </label>
+                                        <label class="promo-option d-flex align-items-center gap-2 mb-0">
+                                            <input type="radio" name="Promo-@item.ProductId" class="form-check-input mt-0" onclick="calculateTotals()" />
+                                            <span class="small text-dark">Tặng phiếu giảm giá 10% cho đơn hàng sau</span>
+                                        </label>
+                                    </div>
+                                    <div class="text-primary mt-2 small cursor-pointer fw-semibold text-end" style="font-size: 0.8rem;">
+                                        Xem thêm ưu đãi khác <i class="bi bi-chevron-down ms-1"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- 5. Yêu cầu đặc biệt -->
+                <div class="card card-custom p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-pencil-square me-2 text-primary"></i>3. Yêu cầu đặc biệt</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="special-request-item d-flex align-items-center justify-content-between">
+                            <label class="form-check-label text-dark fw-medium" for="reqNoSpicy">
+                                <i class="bi bi-fire text-muted me-2"></i> Ít cay / Không cay (không bỏ ớt)
+                            </label>
+                            <input class="form-check-input" type="checkbox" id="reqNoSpicy" onchange="updateNotesField()" />
+                        </div>
+                        <div class="special-request-item d-flex align-items-center justify-content-between">
+                            <label class="form-check-label text-dark fw-medium" for="reqMoreSoup">
+                                <i class="bi bi-droplet-half text-muted me-2"></i> Lấy thêm nước lèo riêng
+                            </label>
+                            <input class="form-check-input" type="checkbox" id="reqMoreSoup" onchange="updateNotesField()" />
+                        </div>
+                        <div class="special-request-item d-flex align-items-center justify-content-between">
+                            <label class="form-check-label text-dark fw-medium" for="reqUtensils">
+                                <i class="bi bi-egg-fried text-muted me-2"></i> Yêu cầu thêm muỗng đũa ăn kèm
+                            </label>
+                            <input class="form-check-input" type="checkbox" id="reqUtensils" onchange="updateNotesField()" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. Hình thức thanh toán -->
+                <div class="card card-custom p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-credit-card-2-front me-2 text-primary"></i>4. Hình thức thanh toán</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Option 1: Ví điện tử -->
+                        <div class="payment-method-card d-flex align-items-start gap-3" id="payEWallet" onclick="selectPaymentMethod('EWallet')">
+                            <input class="form-check-input mt-1" type="radio" name="PaymentMethodOption" id="radioEWallet" />
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                    Qua ví MoMo / ZaloPay
+                                    <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Ưu đãi giảm 5%</span>
+                                </div>
+                                <div class="text-secondary small mt-1">Thanh toán bằng ví điện tử nhanh chóng, tiện lợi.</div>
+                            </div>
+                        </div>
+
+                        <!-- Option 2: Chuyển khoản ngân hàng -->
+                        <div class="payment-method-card d-flex align-items-start gap-3" id="payBank" onclick="selectPaymentMethod('Bank')">
+                            <input class="form-check-input mt-1" type="radio" name="PaymentMethodOption" id="radioBank" />
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark">Chuyển khoản ngân hàng (Thủ công)</div>
+                                <div class="text-secondary small mt-1">Thông tin tài khoản ngân hàng sẽ được hiển thị khi đặt hàng thành công.</div>
+                            </div>
+                        </div>
+
+                        <!-- Option 2.5: Chuyển khoản VietQR -->
+                        <div class="payment-method-card d-flex align-items-start gap-3" id="payVietQR" onclick="selectPaymentMethod('VietQR')">
+                            <input class="form-check-input mt-1" type="radio" name="PaymentMethodOption" id="radioVietQR" />
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                    Thanh toán qua VietQR (Chuyển khoản nhanh)
+                                    <span class="badge bg-success text-white" style="font-size: 0.65rem;">Khuyên dùng</span>
+                                </div>
+                                <div class="text-secondary small mt-1">Quét mã QR động chuyển khoản bằng mọi ứng dụng ngân hàng tức thì, chính xác.</div>
+                            </div>
+                        </div>
+
+                        <!-- Option 3: COD -->
+                        <div class="payment-method-card d-flex align-items-start gap-3 selected" id="payCOD" onclick="selectPaymentMethod('COD')">
+                            <input class="form-check-input mt-1" type="radio" name="PaymentMethodOption" id="radioCOD" checked />
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark">Thanh toán tiền mặt khi giao hàng (COD)</div>
+                                <div class="text-secondary small mt-1">Nhận món ăn nóng hổi rồi mới trả tiền trực tiếp cho tài xế giao hàng.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-primary mt-3 small cursor-pointer fw-semibold text-end">
+                        Xem thêm hình thức thanh toán khác <i class="bi bi-chevron-down ms-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI (40%): Tổng kết & Nút đặt hàng -->
+            <div class="col-lg-5">
+                <div class="position-sticky" style="top: 100px;">
+                    <!-- 2. Khối Địa chỉ giao hàng (Tóm tắt ở cột phải) -->
+                    <div class="card card-custom p-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-geo-alt text-primary me-2"></i>Địa chỉ nhận hàng</h6>
+                        <div class="address-display-box">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold text-dark" id="displayRecipientName">Chưa cung cấp tên nhận hàng</div>
+                                    <div class="text-secondary small py-1" id="displayRecipientPhone">Chưa cung cấp SĐT</div>
+                                    <div class="text-dark small" id="displayDeliveryType"><span class="badge bg-secondary">Giao tận nơi</span></div>
+                                    <div class="text-dark fw-semibold mt-1" id="displayAddress">Thành phố Hồ Chí Minh</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#deliveryModal">
+                                    <i class="bi bi-pencil-square me-1"></i> Cung cấp / Sửa địa chỉ giao hàng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4, 6, 7. Khối tính tiền chi tiết -->
+                    <div class="card card-custom p-4">
+                        <!-- Tạm tính -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-secondary" id="subtotalLabel">Tạm tính (0 phần ăn):</span>
+                            <span class="fw-bold text-dark fs-5" id="subtotalPrice">0đ</span>
+                        </div>
+
+                        <!-- Phí vận chuyển -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-secondary">Phí vận chuyển:</span>
+                            <span class="fw-bold text-dark fs-5" id="shippingFeePrice">Chưa chọn tỉnh/thành</span>
+                        </div>
+
+                        <!-- Điểm thành viên và Toggle -->
+                        <div class="d-flex align-items-center justify-content-between py-3 my-2 border-top border-bottom">
+                            <div>
+                                <div class="fw-bold text-dark small">Dùng điểm thành viên Mì 3AE</div>
+                                <div class="text-secondary" style="font-size: 0.75rem;">Đang có sẵn: <strong class="text-warning">22.190 điểm</strong></div>
+                            </div>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="toggleMemberPoints" onchange="calculateTotals()" />
+                            </div>
+                        </div>
+
+                        <!-- Mã giảm giá -->
+                        <div class="d-flex justify-content-between align-items-center py-2 mb-3 bg-light rounded-3 px-3 cursor-pointer" style="border: 1px solid #e8e8e8;">
+                            <span class="small fw-semibold text-secondary"><i class="bi bi-ticket-perforated-fill text-danger me-2"></i>Chọn hoặc nhập mã giảm</span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </div>
+
+                        <!-- Tổng tiền -->
+                        <div class="d-flex justify-content-between align-items-center pt-2 mb-2">
+                            <span class="fw-bold text-dark fs-5">Tổng tiền:</span>
+                            <span class="fw-bold text-primary fs-3" id="totalPrice">0đ</span>
+                        </div>
+
+                        <!-- Điểm tích lũy cho đơn này -->
+                        <div class="d-flex justify-content-between align-items-center text-secondary small mb-4">
+                            <span>Điểm tích lũy thành viên Mì 3AE:</span>
+                            <span class="fw-bold text-warning" id="earnedPoints">0 điểm</span>
+                        </div>
+
+                        <!-- Nút Đặt hàng -->
+                        <button type="submit" class="btn btn-warning w-100 rounded-pill py-3 fw-bold text-white shadow" style="background: linear-gradient(135deg, #ff7a00, #ff5500); border: none;" onclick="return validateCheckoutForm()">
+                            ĐẶT HÀNG NGAY
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL THÔNG TIN GIAO HÀNG (DELIVERY MODAL) -->
+<!-- ========================================== -->
+<div class="modal fade" id="deliveryModal" tabindex="-1" aria-labelledby="deliveryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <!-- 1. Tiêu đề Modal -->
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="deliveryModalLabel">
+                    <i class="bi bi-truck text-primary me-2"></i> Thông tin giao hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body pt-3">
+                <!-- 2. Khối Thông tin người đặt -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary small">Thông tin người đặt</label>
+                    
+                    <!-- Danh xưng -->
+                    <div class="d-flex gap-4 mb-3">
+                        <label class="form-check-label d-flex align-items-center gap-2 cursor-pointer">
+                            <input type="radio" name="modalGender" class="form-check-input mt-0" id="genderMale" checked />
+                            <span>Anh</span>
+                        </label>
+                        <label class="form-check-label d-flex align-items-center gap-2 cursor-pointer">
+                            <input type="radio" name="modalGender" class="form-check-input mt-0" id="genderFemale" />
+                            <span>Chị</span>
+                        </label>
+                    </div>
+
+                    <!-- Trường nhập Họ Tên & SĐT -->
+                    <div class="mb-3">
+                        <input type="text" class="form-control rounded-3 border-light-subtle px-3 py-2 bg-light bg-opacity-50" id="modalCustomerName" placeholder="Họ và Tên" value="@Model.CustomerName" />
+                        <div class="text-danger small mt-1 d-none" id="errorModalName">Họ tên không được để trống.</div>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control rounded-3 border-light-subtle px-3 py-2 bg-light bg-opacity-50" id="modalPhone" placeholder="Số điện thoại" value="@Model.Phone" />
+                        <div class="text-danger small mt-1 d-none" id="errorModalPhone">Số điện thoại không hợp lệ (cần từ 10 số).</div>
+                    </div>
+
+                    <!-- Khối gợi ý đăng nhập (Chỉ hiển thị nếu chưa đăng nhập) -->
+                    @if (!SignInManager.IsSignedIn(User))
+                    {
+                        <div class="login-cta-banner d-flex align-items-center justify-content-between shadow-2xs">
+                            <div class="small text-dark-emphasis fw-medium me-2" style="font-size: 0.85rem;">
+                                Đăng nhập để tự động điền thông tin giao hàng trong 10s
+                            </div>
+                            <a class="btn btn-warning btn-sm rounded-pill fw-bold text-white px-3" asp-controller="Account" asp-action="Login" style="background-color: #ff7a00; border: none; font-size: 0.75rem;">
+                                Đăng nhập
+                            </a>
+                        </div>
+                    }
+                </div>
+
+                <!-- 3. Khối Chọn hình thức nhận hàng -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary small mb-2">Chọn hình thức nhận hàng</label>
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="delivery-tab-btn active" id="modalGiaoTanNoiBtn" onclick="modalSwitchDelivery('Giao tận nơi')">
+                            <i class="bi bi-truck-flatbed fs-4 d-block mb-1"></i> Giao tận nơi
+                        </div>
+                        <div class="delivery-tab-btn" id="modalNhanTaiSieuThiBtn" onclick="modalSwitchDelivery('Ăn tại quán')">
+                            <i class="bi bi-shop fs-4 d-block mb-1"></i> Ăn tại quán
+                        </div>
+                    </div>
+
+                    <!-- ====== KHỐI GIAO TẬN NƠI (hiện mặc định) ====== -->
+                    <div id="deliveryFieldsContainer">
+                        <!-- Nút định vị GPS -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-bold py-2" id="btnGpsLocator" onclick="getCurrentGpsLocation()">
+                                <i class="bi bi-geo-alt-fill me-1"></i> Định vị vị trí hiện tại (GPS)
+                            </button>
+                            <div id="gpsStatus" class="small text-muted mt-1 text-center d-none"></div>
+                        </div>
+
+                        <!-- Địa chỉ đang chọn -->
+                        <div class="p-3 bg-light rounded-3 mb-3 border border-light-subtle">
+                            <div class="text-secondary small mb-1">Địa chỉ giao hàng hiện tại:</div>
+                            <div class="fw-semibold text-dark" id="modalDisplayAddress">Thành phố Hồ Chí Minh</div>
+                        </div>
+
+                        <!-- Tìm kiếm địa chỉ thủ công (Forward Geocoding) -->
+                        <div class="mb-3">
+                            <label for="addressSearchInput" class="form-label fw-bold text-secondary small">Hoặc tìm kiếm địa chỉ giao hàng</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control border-light-subtle bg-light bg-opacity-50" id="addressSearchInput" placeholder="Nhập địa chỉ (VD: 1 Võ Văn Ngân, Thủ Đức)" onkeypress="if(event.key === 'Enter') { searchAddress(); return false; }">
+                                <button class="btn btn-primary fw-bold px-3" type="button" onclick="searchAddress()" id="btnSearchAddress">
+                                    <i class="bi bi-search"></i> Tìm
+                                </button>
+                            </div>
+                            <div id="searchAddressStatus" class="small text-muted mt-1 d-none"></div>
+                        </div>
+
+                        <!-- Nút chỉnh sửa địa chỉ chi tiết -->
+                        <div class="mb-3">
+                            <button type="button" class="dashed-btn" onclick="toggleEditAddressField()">
+                                <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa thông tin địa chỉ giao hàng
+                            </button>
+                        </div>
+
+                        <!-- Trường nhập chi tiết địa chỉ (mặc định ẩn, hiện ra khi bấm nút chỉnh sửa) -->
+                        <div id="addressEditContainer" class="d-none mb-3">
+                            <textarea class="form-control rounded-3 border-light-subtle px-3 py-2 bg-light bg-opacity-50" id="modalAddressDetail" rows="2" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."></textarea>
+                        </div>
+
+                        <!-- Tùy chọn đặt hàng cho người khác -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="modalOtherReceiver" onchange="toggleOtherReceiverForm()" />
+                            <label class="form-check-label text-dark small fw-semibold" for="modalOtherReceiver">
+                                <i class="bi bi-gift me-1 text-danger"></i> Đặt hàng cho người khác (Mua tặng)
+                            </label>
+                        </div>
+
+                        <!-- Khối thông tin người nhận khác (mặc định ẩn) -->
+                        <div id="otherReceiverContainer" class="d-none mb-3">
+                            <div class="p-3 rounded-3 border" style="border-color: #ffd591 !important; background: linear-gradient(135deg, #fffbe6, #fff7e6);">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-info-circle-fill text-warning"></i>
+                                    <span class="small fw-bold text-dark">Thông tin người nhận hàng</span>
+                                </div>
+                                <div class="small text-muted mb-3" style="font-size: 0.78rem;">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                                    Vui lòng điền <strong>chính xác</strong> họ tên và số điện thoại của người nhận để tài xế có thể liên hệ giao hàng đúng người.
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm rounded-3 border-light-subtle px-3 py-2 bg-white" id="otherReceiverName" placeholder="Họ và tên người nhận hàng *" />
+                                    <div class="text-danger small mt-1 d-none" id="errorOtherName">Vui lòng nhập họ tên người nhận.</div>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm rounded-3 border-light-subtle px-3 py-2 bg-white" id="otherReceiverPhone" placeholder="Số điện thoại người nhận *" />
+                                    <div class="text-danger small mt-1 d-none" id="errorOtherPhone">Số điện thoại người nhận không hợp lệ.</div>
+                                </div>
+                                <div>
+                                    <textarea class="form-control form-control-sm rounded-3 border-light-subtle px-3 py-2 bg-white" id="otherReceiverNote" rows="2" placeholder="Lời nhắn gửi kèm (Ví dụ: 'Chúc sinh nhật vui vẻ!')"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== KHỐI ĂN TẠI QUÁN (mặc định ẩn) ====== -->
+                    <div id="dineInFieldsContainer" class="d-none">
+                        <div class="p-3 rounded-3 border mb-3" style="border-color: #b7eb8f !important; background: linear-gradient(135deg, #f6ffed, #fcffe6);">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-shop fs-5 text-success"></i>
+                                <span class="fw-bold text-dark">Thông tin ăn tại quán Mì 3AE</span>
+                            </div>
+
+                            <div class="small text-muted mb-3" style="font-size: 0.8rem;">
+                                <i class="bi bi-info-circle text-primary me-1"></i>
+                                Quán sẽ chuẩn bị trước phần ăn dựa trên thời gian bạn dự kiến đến. Vui lòng điền chính xác để quán phục vụ tốt nhất!
+                            </div>
+
+                            <!-- Số lượng khách -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small mb-1">Số lượng khách đến ăn</label>
+                                <select class="form-select form-select-sm rounded-3 border-light-subtle px-3 py-2 bg-white" id="dineInGuestCount">
+                                    <option value="1">1 người</option>
+                                    <option value="2" selected>2 người</option>
+                                    <option value="3">3 người</option>
+                                    <option value="4">4 người</option>
+                                    <option value="5">5 người</option>
+                                    <option value="6">6 người</option>
+                                    <option value="7">7 - 10 người</option>
+                                    <option value="10">Trên 10 người (Liên hệ quán trước)</option>
+                                </select>
+                            </div>
+
+                            <!-- Ngày dự kiến đến -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small mb-1">Ngày dự kiến đến quán</label>
+                                <input type="date" class="form-control form-control-sm rounded-3 border-light-subtle px-3 py-2 bg-white" id="dineInDate" />
+                                <div class="text-danger small mt-1 d-none" id="errorDineInDate">Vui lòng chọn ngày đến quán.</div>
+                            </div>
+
+                            <!-- Giờ dự kiến đến -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small mb-1">Giờ dự kiến đến quán</label>
+                                <select class="form-select form-select-sm rounded-3 border-light-subtle px-3 py-2 bg-white" id="dineInTime">
+                                    <option value="">-- Chọn giờ --</option>
+                                    <option value="07:00">07:00 - Sáng sớm</option>
+                                    <option value="08:00">08:00 - Sáng</option>
+                                    <option value="09:00">09:00 - Sáng</option>
+                                    <option value="10:00">10:00 - Gần trưa</option>
+                                    <option value="11:00" selected>11:00 - Trưa</option>
+                                    <option value="12:00">12:00 - Trưa</option>
+                                    <option value="13:00">13:00 - Chiều</option>
+                                    <option value="14:00">14:00 - Chiều</option>
+                                    <option value="15:00">15:00 - Xế chiều</option>
+                                    <option value="16:00">16:00 - Xế chiều</option>
+                                    <option value="17:00">17:00 - Chiều tối</option>
+                                    <option value="18:00">18:00 - Tối</option>
+                                    <option value="19:00">19:00 - Tối</option>
+                                    <option value="20:00">20:00 - Tối muộn</option>
+                                    <option value="21:00">21:00 - Đóng cửa lúc 21:30</option>
+                                </select>
+                                <div class="text-danger small mt-1 d-none" id="errorDineInTime">Vui lòng chọn giờ đến quán.</div>
+                            </div>
+
+                            <!-- Ghi chú cho quán -->
+                            <div>
+                                <label class="form-label fw-bold text-secondary small mb-1">Ghi chú thêm cho quán (nếu có)</label>
+                                <textarea class="form-control form-control-sm rounded-3 border-light-subtle px-3 py-2 bg-white" id="dineInNote" rows="2" placeholder="VD: Cần bàn ở tầng 2, có trẻ em đi kèm, yêu cầu ghế trẻ em..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="p-2 rounded-3 bg-light border border-light-subtle text-center">
+                            <div class="small text-success fw-bold"><i class="bi bi-clock-history me-1"></i>Giờ mở cửa: 07:00 - 21:30 hàng ngày</div>
+                            <div class="small text-muted" style="font-size: 0.75rem;">Địa chỉ: Quận 1, TP. Hồ Chí Minh</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Nút xác nhận hành động -->
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-primary w-100 rounded-pill py-2.5 fw-bold" onclick="saveDeliveryInfo()">
+                    Xác Nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL THANH TOÁN VIETQR (HIỆN TRƯỚC KHI TẠO ĐƠN) -->
+<!-- ========================================== -->
+<div class="modal fade" id="vietqrPaymentModal" tabindex="-1" aria-labelledby="vietqrPaymentModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="modal-header border-0 text-white px-4 py-3" style="background: linear-gradient(135deg, #1a237e, #283593);">
+                <h5 class="modal-title fw-bold" id="vietqrPaymentModalLabel">
+                    <i class="bi bi-qr-code-scan me-2"></i> Thanh toán qua VietQR
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger rounded-pill px-3 py-2 fs-6" id="qrCountdownBadge">
+                        <i class="bi bi-clock me-1"></i> <span id="qrCountdown">10:00</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <!-- Cột trái: Mã QR -->
+                    <div class="col-md-5 text-center">
+                        <div class="p-3 bg-white rounded-4 border shadow-sm d-inline-block">
+                            <img id="vietqrPaymentImage" src="" class="img-fluid rounded-3" style="max-width: 240px; width: 100%; height: auto;" alt="Mã QR thanh toán Mì 3AE" />
+                        </div>
+                        <div class="text-muted small mt-2">
+                            <i class="bi bi-phone me-1"></i> Mở app Ngân hàng & quét mã QR
+                        </div>
+                    </div>
+
+                    <!-- Cột phải: Thông tin chuyển khoản -->
+                    <div class="col-md-7">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-bank me-2 text-primary"></i>Thông tin chuyển khoản</h6>
+                        <div class="bg-light rounded-3 p-3 mb-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                <span class="text-muted small">Ngân hàng</span>
+                                <span class="fw-bold text-dark text-uppercase" id="qrBankName">@vietqrBankId</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                <span class="text-muted small">Số tài khoản</span>
+                                <span class="fw-bold text-dark" id="qrAccountNo">@vietqrAccountNo</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                <span class="text-muted small">Chủ tài khoản</span>
+                                <span class="fw-bold text-dark" id="qrAccountName">@vietqrAccountName</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                <span class="text-muted small">Số tiền</span>
+                                <span class="fw-bold text-danger fs-5" id="qrAmount">0đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">Nội dung CK</span>
+                                <span class="fw-bold text-primary small" id="qrContent">Mi 3AE thanh toan</span>
+                            </div>
+                        </div>
+
+                        <!-- Hướng dẫn -->
+                        <div class="alert alert-warning border-0 rounded-3 small py-2 mb-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <strong>Lưu ý:</strong> Đơn hàng sẽ ở trạng thái <strong>"Chờ xác nhận thanh toán"</strong> cho đến khi quản trị viên kiểm tra và xác nhận đã nhận được tiền chuyển khoản vào tài khoản ngân hàng của quán.
+                        </div>
+                        <div class="alert alert-info border-0 rounded-3 small py-2 mb-0" role="alert">
+                            <i class="bi bi-info-circle-fill me-1"></i>
+                            Sau khi chuyển khoản thành công, bấm <strong>"Xác nhận đã chuyển khoản"</strong> để hoàn tất đặt hàng.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" onclick="cancelVietQRPayment()">
+                    <i class="bi bi-x-lg me-1"></i> Hủy thanh toán
+                </button>
+                <button type="button" class="btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="confirmVietQRPayment()" id="btnConfirmQR">
+                    <i class="bi bi-check-circle me-1"></i> Xác nhận đã chuyển khoản
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ----------------------------------------------------
+    // ĐỒNG HỒ ĐẾM NGƯỢC FLASHSALE
+    // ----------------------------------------------------
+    function startCountdown() {
+        let totalSeconds = 13 * 3600 + 45 * 60 + 51; // 13:45:51
+        const timerSpan = document.getElementById("countdownTimer");
+        
+        const interval = setInterval(() => {
+            if (totalSeconds <= 0) {
+                clearInterval(interval);
+                timerSpan.textContent = "Đã kết thúc";
+                return;
+            }
+            totalSeconds--;
+            
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            const hDisplay = hours.toString().padStart(2, '0');
+            const mDisplay = minutes.toString().padStart(2, '0');
+            const sDisplay = seconds.toString().padStart(2, '0');
+            
+            timerSpan.textContent = `${hDisplay}:${mDisplay}:${sDisplay}`;
+        }, 1000);
+    }
+
+    // ----------------------------------------------------
+    // CHUYỂN TABS PHƯƠNG THỨC NHẬN HÀNG (TRANG CHÍNH & MODAL)
+    // ----------------------------------------------------
+    let currentDeliveryMethod = "Giao tận nơi";
+
+    // Hàm chuyển tab trên trang chính + toggle hiển thị container tương ứng
+    function switchDeliveryTab(method) {
+        currentDeliveryMethod = method;
+        document.getElementById("hiddenDeliveryMethod").value = method;
+
+        const mainGiaoBtn = document.getElementById("tabGiaoTanNoiBtn");
+        const mainNhanBtn = document.getElementById("tabNhanTaiSieuThiBtn");
+        const displayTypeBadge = document.getElementById("displayDeliveryType");
+
+        if (method === "Giao tận nơi") {
+            mainGiaoBtn.classList.add("active");
+            mainNhanBtn.classList.remove("active");
+            displayTypeBadge.innerHTML = `<span class="badge bg-primary"><i class="bi bi-truck me-1"></i> Giao tận nơi</span>`;
+        } else {
+            mainGiaoBtn.classList.remove("active");
+            mainNhanBtn.classList.add("active");
+            displayTypeBadge.innerHTML = `<span class="badge bg-success"><i class="bi bi-shop me-1"></i> Ăn tại quán</span>`;
+        }
+
+        // Đồng bộ hóa trạng thái tương ứng sang Modal
+        syncToModalDelivery(method);
+        // Toggle các khối form trong Modal
+        toggleDeliveryContainers(method);
+    }
+
+    // Hàm chuyển tab từ bên trong Modal
+    function modalSwitchDelivery(method) {
+        currentDeliveryMethod = method;
+        document.getElementById("hiddenDeliveryMethod").value = method;
+
+        const modalGiaoBtn = document.getElementById("modalGiaoTanNoiBtn");
+        const modalNhanBtn = document.getElementById("modalNhanTaiSieuThiBtn");
+
+        if (method === "Giao tận nơi") {
+            modalGiaoBtn.classList.add("active");
+            modalNhanBtn.classList.remove("active");
+        } else {
+            modalGiaoBtn.classList.remove("active");
+            modalNhanBtn.classList.add("active");
+        }
+
+        // Toggle các khối form trong Modal
+        toggleDeliveryContainers(method);
+        // Đồng bộ hóa trạng thái tương ứng ra trang chính
+        switchDeliveryTab(method);
+    }
+
+    // Hàm đồng bộ trạng thái active giữa tab Modal và trang chính
+    function syncToModalDelivery(method) {
+        const modalGiaoBtn = document.getElementById("modalGiaoTanNoiBtn");
+        const modalNhanBtn = document.getElementById("modalNhanTaiSieuThiBtn");
+
+        if (method === "Giao tận nơi") {
+            if (modalGiaoBtn) modalGiaoBtn.classList.add("active");
+            if (modalNhanBtn) modalNhanBtn.classList.remove("active");
+        } else {
+            if (modalGiaoBtn) modalGiaoBtn.classList.remove("active");
+            if (modalNhanBtn) modalNhanBtn.classList.add("active");
+        }
+    }
+
+    // Hàm hiện/ẩn container "Giao tận nơi" và "Ăn tại quán" trong modal
+    function toggleDeliveryContainers(method) {
+        const deliveryContainer = document.getElementById("deliveryFieldsContainer");
+        const dineInContainer = document.getElementById("dineInFieldsContainer");
+
+        if (deliveryContainer && dineInContainer) {
+            if (method === "Giao tận nơi") {
+                deliveryContainer.classList.remove("d-none");
+                dineInContainer.classList.add("d-none");
+            } else {
+                deliveryContainer.classList.add("d-none");
+                dineInContainer.classList.remove("d-none");
+                // Tự động đặt ngày hôm nay nếu chưa có
+                const dateField = document.getElementById("dineInDate");
+                if (dateField && !dateField.value) {
+                    dateField.value = new Date().toISOString().split('T')[0];
+                }
+            }
+        }
+    }
+
+    // Hàm toggle form đặt hàng cho người khác
+    function toggleOtherReceiverForm() {
+        const container = document.getElementById("otherReceiverContainer");
+        const checkbox = document.getElementById("modalOtherReceiver");
+        if (container && checkbox) {
+            if (checkbox.checked) {
+                container.classList.remove("d-none");
+            } else {
+                container.classList.add("d-none");
+            }
+        }
+    }
+
+    // ----------------------------------------------------
+    // HIỆN THỊ TRƯỜNG ĐỊA CHỈ CHI TIẾT TRONG MODAL
+    // ----------------------------------------------------
+    function toggleEditAddressField() {
+        const container = document.getElementById("addressEditContainer");
+        container.classList.toggle("d-none");
+    }
+
+    // ----------------------------------------------------
+    // LƯU THÔNG TIN TỪ MODAL RA TRANG CHÍNH & HIDDEN INPUTS
+    // ----------------------------------------------------
+    function saveDeliveryInfo() {
+        const nameInput = document.getElementById("modalCustomerName").value.trim();
+        const phoneInput = document.getElementById("modalPhone").value.trim();
+        const otherReceiver = document.getElementById("modalOtherReceiver").checked;
+
+        // Reset tất cả errors
+        document.getElementById("errorModalName").classList.add("d-none");
+        document.getElementById("errorModalPhone").classList.add("d-none");
+        const errorOtherName = document.getElementById("errorOtherName");
+        const errorOtherPhone = document.getElementById("errorOtherPhone");
+        const errorDineInDate = document.getElementById("errorDineInDate");
+        const errorDineInTime = document.getElementById("errorDineInTime");
+        if (errorOtherName) errorOtherName.classList.add("d-none");
+        if (errorOtherPhone) errorOtherPhone.classList.add("d-none");
+        if (errorDineInDate) errorDineInDate.classList.add("d-none");
+        if (errorDineInTime) errorDineInTime.classList.add("d-none");
+
+        let isValid = true;
+
+        // Validate thông tin người đặt (luôn bắt buộc)
+        if (!nameInput) {
+            document.getElementById("errorModalName").classList.remove("d-none");
+            isValid = false;
+        }
+        if (!phoneInput || phoneInput.length < 10) {
+            document.getElementById("errorModalPhone").classList.remove("d-none");
+            isValid = false;
+        }
+
+        // Validate thông tin người nhận khác (nếu chọn mua tặng + giao tận nơi)
+        if (currentDeliveryMethod === "Giao tận nơi" && otherReceiver) {
+            const otherName = document.getElementById("otherReceiverName").value.trim();
+            const otherPhone = document.getElementById("otherReceiverPhone").value.trim();
+            if (!otherName) {
+                if (errorOtherName) errorOtherName.classList.remove("d-none");
+                isValid = false;
+            }
+            if (!otherPhone || otherPhone.length < 10) {
+                if (errorOtherPhone) errorOtherPhone.classList.remove("d-none");
+                isValid = false;
+            }
+        }
+
+        // Validate thông tin ăn tại quán
+        if (currentDeliveryMethod === "Ăn tại quán") {
+            const dineInDate = document.getElementById("dineInDate").value;
+            const dineInTime = document.getElementById("dineInTime").value;
+            if (!dineInDate) {
+                if (errorDineInDate) errorDineInDate.classList.remove("d-none");
+                isValid = false;
+            }
+            if (!dineInTime) {
+                if (errorDineInTime) errorDineInTime.classList.remove("d-none");
+                isValid = false;
+            }
+        }
+
+        if (!isValid) return;
+
+        // Cập nhật giá trị hiển thị trên trang chính
+        document.getElementById("displayRecipientName").textContent = nameInput;
+        document.getElementById("displayRecipientPhone").textContent = phoneInput;
+
+        let finalAddress = "Thành phố Hồ Chí Minh";
+
+        if (currentDeliveryMethod === "Ăn tại quán") {
+            // Ăn tại quán → hiển thị địa chỉ quán
+            finalAddress = "Ăn tại quán Mì 3AE - Thủ Đức, TP.HCM";
+            // Xóa phí vận chuyển
+            document.getElementById("shippingFeeInput").value = 0;
+            document.getElementById("shippingFeeOriginal").value = 0;
+        } else {
+            // Giao tận nơi → lấy địa chỉ từ form
+            const addressText = document.getElementById("modalAddressDetail").value.trim();
+            if (addressText) {
+                finalAddress = addressText;
+            } else {
+                finalAddress = "Vui lòng tìm kiếm hoặc định vị địa chỉ giao hàng";
+            }
+        }
+
+        document.getElementById("displayAddress").textContent = finalAddress;
+        const modalDisplayAddr = document.getElementById("modalDisplayAddress");
+        if (modalDisplayAddr) modalDisplayAddr.textContent = finalAddress;
+
+        // Cập nhật giá trị vào các hidden inputs của form
+        document.getElementById("hiddenCustomerName").value = nameInput;
+        document.getElementById("hiddenPhone").value = phoneInput;
+        document.getElementById("hiddenAddress").value = finalAddress;
+
+        // Ghi chú đính kèm
+        updateNotesField(otherReceiver);
+
+        // Cập nhật badge phương thức trên trang chính
+        const displayTypeBadge = document.getElementById("displayDeliveryType");
+        if (currentDeliveryMethod === "Ăn tại quán") {
+            const dineTime = document.getElementById("dineInTime").value;
+            const dineDate = document.getElementById("dineInDate").value;
+            const guestCount = document.getElementById("dineInGuestCount");
+            const guestText = guestCount.options[guestCount.selectedIndex].text;
+            displayTypeBadge.innerHTML = `<span class="badge bg-success"><i class="bi bi-shop me-1"></i> Ăn tại quán</span> <span class="badge bg-light text-dark border ms-1" style="font-size:0.7rem;"><i class="bi bi-clock me-1"></i>${dineDate} lúc ${dineTime} | ${guestText}</span>`;
+
+            // Cập nhật hiển thị phí ship = Miễn phí (ăn tại quán)
+            document.getElementById("shippingFeePrice").textContent = "Miễn phí";
+        }
+
+        // Đóng modal
+        const modalElement = document.getElementById('deliveryModal');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        modal.hide();
+
+        // Tính lại tổng tiền sau khi đóng modal
+        calculateTotals();
+    }
+
+    // ----------------------------------------------------
+    // CẬP NHẬT CÁC YÊU CẦU ĐẶC BIỆT VÀO NOTES FIELD
+    // ----------------------------------------------------
+    function updateNotesField(isOtherReceiver = false) {
+        let notesArr = [];
+        
+        // Phương thức nhận hàng
+        notesArr.push(`[Hình thức: ${currentDeliveryMethod}]`);
+
+        // Thông tin đặt hàng cho người khác (chỉ khi giao tận nơi)
+        if (currentDeliveryMethod === "Giao tận nơi") {
+            const otherReceiver = document.getElementById("modalOtherReceiver") ? document.getElementById("modalOtherReceiver").checked : false;
+            if (isOtherReceiver || otherReceiver) {
+                const otherName = document.getElementById("otherReceiverName") ? document.getElementById("otherReceiverName").value.trim() : "";
+                const otherPhone = document.getElementById("otherReceiverPhone") ? document.getElementById("otherReceiverPhone").value.trim() : "";
+                const otherNote = document.getElementById("otherReceiverNote") ? document.getElementById("otherReceiverNote").value.trim() : "";
+                notesArr.push(`[ĐẶT CHO NGƯỜI KHÁC]`);
+                if (otherName) notesArr.push(`[Người nhận: ${otherName}]`);
+                if (otherPhone) notesArr.push(`[SĐT người nhận: ${otherPhone}]`);
+                if (otherNote) notesArr.push(`[Lời nhắn: ${otherNote}]`);
+            }
+        }
+
+        // Thông tin ăn tại quán
+        if (currentDeliveryMethod === "Ăn tại quán") {
+            const guestCount = document.getElementById("dineInGuestCount");
+            const dineDate = document.getElementById("dineInDate");
+            const dineTime = document.getElementById("dineInTime");
+            const dineNote = document.getElementById("dineInNote");
+            if (guestCount) notesArr.push(`[Số khách: ${guestCount.options[guestCount.selectedIndex].text}]`);
+            if (dineDate && dineDate.value) notesArr.push(`[Ngày đến: ${dineDate.value}]`);
+            if (dineTime && dineTime.value) notesArr.push(`[Giờ đến: ${dineTime.value}]`);
+            if (dineNote && dineNote.value.trim()) notesArr.push(`[Ghi chú quán: ${dineNote.value.trim()}]`);
+        }
+
+        // Yêu cầu đặc biệt
+        if (document.getElementById("reqNoSpicy") && document.getElementById("reqNoSpicy").checked) {
+            notesArr.push("Ít cay / Không cay (không bỏ ớt)");
+        }
+        if (document.getElementById("reqMoreSoup") && document.getElementById("reqMoreSoup").checked) {
+            notesArr.push("Lấy thêm nước lèo riêng");
+        }
+        if (document.getElementById("reqUtensils") && document.getElementById("reqUtensils").checked) {
+            notesArr.push("Yêu cầu thêm muỗng đũa ăn kèm");
+        }
+
+        // Phương thức thanh toán
+        let payMethodText = "Tiền mặt COD";
+        if (selectedPayMethod === "EWallet") payMethodText = "Ví điện tử MoMo/ZaloPay";
+        else if (selectedPayMethod === "Bank") payMethodText = "Chuyển khoản ngân hàng";
+        else if (selectedPayMethod === "VietQR") payMethodText = "Chuyển khoản VietQR";
+        notesArr.push(`[Hình thức thanh toán: ${payMethodText}]`);
+
+        // Tỉnh thành (chỉ khi giao tận nơi)
+        if (currentDeliveryMethod === "Giao tận nơi") {
+            const provinceSelect = document.getElementById("modalProvince");
+            if (provinceSelect && provinceSelect.value) {
+                const provinceName = provinceSelect.options[provinceSelect.selectedIndex].text;
+                notesArr.push(`[Khu vực giao hàng: ${provinceName}]`);
+            }
+        }
+
+        // Phí ship (chỉ khi giao tận nơi)
+        if (currentDeliveryMethod === "Giao tận nơi") {
+            const shippingFee = parseFloat(document.getElementById("shippingFeeInput").value || "0");
+            const originalFee = parseFloat(document.getElementById("shippingFeeOriginal").value || "0");
+            if (shippingFee > 0) {
+                notesArr.push(`[Phí vận chuyển: ${formatMoney(shippingFee)}]`);
+            } else if (originalFee > 0) {
+                notesArr.push(`[Phí vận chuyển: Miễn phí]`);
+            }
+
+            // Tọa độ GPS
+            const lat = document.getElementById("customerLat").value;
+            const lng = document.getElementById("customerLng").value;
+            if (lat && lng) {
+                notesArr.push(`[GPS: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}]`);
+            }
+        }
+
+        document.getElementById("hiddenNotes").value = notesArr.join(", ");
+    }
+
+    // ----------------------------------------------------
+    // THAY ĐỔI SỐ LƯỢNG SẢN PHẨM TRỰC TIẾP QUA AJAX
+    // ----------------------------------------------------
+    function updateQty(productId, delta) {
+        const qtyInput = document.getElementById(`qty-${productId}`);
+        let currentQty = parseInt(qtyInput.value);
+        let newQty = currentQty + delta;
+
+        if (newQty < 1) return;
+
+        // Vô hiệu hóa input và nút bấm tạm thời để chống spam click
+        qtyInput.value = newQty;
+        
+        // Gọi AJAX cập nhật số lượng trong Session
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const formData = new FormData();
+        formData.append("id", productId);
+        formData.append("quantity", newQty);
+        formData.append("__RequestVerificationToken", token);
+
+        fetch('/Cart/UpdateQuantity', {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Cập nhật badge số lượng trên navbar nếu có
+                const badge = document.getElementById("cartCountBadge");
+                if (badge) {
+                    badge.textContent = data.cartCount;
+                    if (data.cartCount > 0) badge.classList.remove("d-none");
+                    else badge.classList.add("d-none");
+                }
+                // Tính toán lại tổng tiền của giỏ hàng trên UI
+                calculateTotals();
+            } else {
+                // Phục hồi số lượng cũ nếu có lỗi
+                qtyInput.value = currentQty;
+                alert("Không thể cập nhật số lượng. Vui lòng thử lại.");
+            }
+        })
+        .catch(err => {
+            qtyInput.value = currentQty;
+            console.error(err);
+        });
+    }
+
+    // ----------------------------------------------------
+    // XÓA SẢN PHẨM KHỎI ĐƠN HÀNG QUA AJAX
+    // ----------------------------------------------------
+    function deleteProduct(productId) {
+        if (!confirm("Bạn có chắc chắn muốn xóa món ăn này khỏi đơn hàng?")) return;
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const formData = new FormData();
+        formData.append("id", productId);
+        formData.append("quantity", 0); // Đặt quantity = 0 để xóa
+        formData.append("__RequestVerificationToken", token);
+
+        fetch('/Cart/UpdateQuantity', {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Xóa hàng món ăn khỏi giao diện
+                const productRow = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productRow) {
+                    productRow.remove();
+                }
+
+                // Cập nhật lại số lượng món ăn trên navbar
+                const badge = document.getElementById("cartCountBadge");
+                if (badge) {
+                    badge.textContent = data.cartCount;
+                    if (data.cartCount > 0) badge.classList.remove("d-none");
+                    else badge.classList.add("d-none");
+                }
+
+                // Tính toán lại tổng tiền hoặc chuyển hướng nếu đơn hàng trống
+                const remainingRows = document.querySelectorAll(".product-row");
+                if (remainingRows.length === 0) {
+                    alert("Không còn món ăn nào trong đơn hàng thanh toán.");
+                    window.location.href = "/Cart";
+                } else {
+                    calculateTotals();
+                }
+            }
+        })
+        .catch(err => console.error(err));
+    }
+
+    let selectedPayMethod = "COD"; // Biến lưu trữ hình thức thanh toán được chọn
+
+    // ----------------------------------------------------
+    // TÍNH TOÁN LẠI TẠM TÍNH, ĐIỂM THƯỞNG, TỔNG TIỀN TRỰC TIẾP
+    // ----------------------------------------------------
+    function calculateTotals() {
+        let subtotal = 0;
+        let totalItemsCount = 0;
+
+        const productRows = document.querySelectorAll(".product-row");
+        productRows.forEach(row => {
+            const price = parseFloat(row.getAttribute("data-price"));
+            const productId = row.getAttribute("data-product-id");
+            const qty = parseInt(document.getElementById(`qty-${productId}`).value);
+
+            subtotal += price * qty;
+            totalItemsCount += qty;
+        });
+
+        // Hiển thị nhãn tạm tính kèm số lượng
+        document.getElementById("subtotalLabel").textContent = `Tạm tính (${totalItemsCount} phần ăn):`;
+        document.getElementById("subtotalPrice").textContent = formatMoney(subtotal);
+
+        // Xử lý điểm thành viên Mì 3AE (trừ tiền nếu chọn dùng điểm, giả lập)
+        let discount = 0;
+        const toggleMemberPoints = document.getElementById("toggleMemberPoints");
+        if (toggleMemberPoints && toggleMemberPoints.checked) {
+            discount = 22190;
+            // Đồng bộ giá trị vào hidden input để gửi lên server
+            document.getElementById("hiddenUseMemberPoints").value = "true";
+        } else {
+            document.getElementById("hiddenUseMemberPoints").value = "false";
+        }
+
+        // Tính toán phí vận chuyển và áp dụng chính sách miễn phí ship đơn hàng lớn
+        let originalFee = parseFloat(document.getElementById("shippingFeeOriginal") ? document.getElementById("shippingFeeOriginal").value : "0");
+        let shippingFee = originalFee;
+
+        // Miễn phí vận chuyển cho đơn hàng món ăn từ 300,000đ trở lên
+        if (subtotal >= 300000) {
+            shippingFee = 0;
+        }
+
+        // Lưu phí ship thực tế được áp dụng vào input ẩn
+        if (document.getElementById("shippingFeeInput")) {
+            document.getElementById("shippingFeeInput").value = shippingFee;
+        }
+
+        // Cập nhật phí ship lên UI
+        const feePriceElement = document.getElementById("shippingFeePrice");
+        if (feePriceElement) {
+            if (shippingFee === 0 && originalFee > 0) {
+                feePriceElement.textContent = "Miễn phí (Đơn ≥ 300K)";
+            } else if (shippingFee === 0 && originalFee === 0) {
+                const provinceSelect = document.getElementById("modalProvince");
+                if (provinceSelect && provinceSelect.value) {
+                    feePriceElement.textContent = "0đ";
+                } else {
+                    feePriceElement.textContent = "Chưa chọn tỉnh/thành";
+                }
+            } else {
+                feePriceElement.textContent = formatMoney(shippingFee);
+            }
+        }
+
+        let finalTotal = subtotal + shippingFee - discount;
+        if (finalTotal < 0) finalTotal = 0;
+
+        // Cập nhật tổng tiền và điểm tích lũy mới (0.1% tổng giá trị)
+        document.getElementById("totalPrice").textContent = formatMoney(finalTotal);
+        
+        let earnedPoints = Math.floor(finalTotal * 0.001);
+        document.getElementById("earnedPoints").textContent = `${earnedPoints.toLocaleString('vi-VN')} điểm`;
+    }
+
+    function formatMoney(amount) {
+        return amount.toLocaleString('vi-VN') + "đ";
+    }
+
+    // ----------------------------------------------------
+    // LỰA CHỌN PHƯƠNG THỨC THANH TOÁN
+    // ----------------------------------------------------
+    function selectPaymentMethod(type) {
+        selectedPayMethod = type;
+        
+        // Gỡ chọn class cũ
+        document.getElementById("payEWallet").classList.remove("selected");
+        document.getElementById("payBank").classList.remove("selected");
+        document.getElementById("payCOD").classList.remove("selected");
+        if (document.getElementById("payVietQR")) {
+            document.getElementById("payVietQR").classList.remove("selected");
+        }
+
+        document.getElementById("radioEWallet").checked = false;
+        document.getElementById("radioBank").checked = false;
+        document.getElementById("radioCOD").checked = false;
+        if (document.getElementById("radioVietQR")) {
+            document.getElementById("radioVietQR").checked = false;
+        }
+
+        // Chọn hình thức mới
+        if (type === 'EWallet') {
+            document.getElementById("payEWallet").classList.add("selected");
+            document.getElementById("radioEWallet").checked = true;
+            document.getElementById("hiddenPaymentMethod").value = "MoMo/ZaloPay";
+        } else if (type === 'Bank') {
+            document.getElementById("payBank").classList.add("selected");
+            document.getElementById("radioBank").checked = true;
+            document.getElementById("hiddenPaymentMethod").value = "Bank";
+        } else if (type === 'VietQR') {
+            if (document.getElementById("payVietQR")) {
+                document.getElementById("payVietQR").classList.add("selected");
+                document.getElementById("radioVietQR").checked = true;
+            }
+            document.getElementById("hiddenPaymentMethod").value = "VietQR";
+        } else {
+            document.getElementById("payCOD").classList.add("selected");
+            document.getElementById("radioCOD").checked = true;
+            document.getElementById("hiddenPaymentMethod").value = "COD";
+        }
+
+        updateNotesField();
+    }
+
+    // ----------------------------------------------------
+    // CÁC HÀM XỬ LÝ GPS VÀ ĐỊNH VỊ OSRM
+    // ----------------------------------------------------
+
+    // Hàm lấy vị trí GPS hiện tại từ trình duyệt
+    function getCurrentGpsLocation() {
+        const btn = document.getElementById("btnGpsLocator");
+        const status = document.getElementById("gpsStatus");
+
+        if (!navigator.geolocation) {
+            status.textContent = "Trình duyệt của bạn không hỗ trợ định vị GPS.";
+            status.className = "small text-danger mt-1 text-center";
+            status.classList.remove("d-none");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Đang định vị...`;
+        status.className = "small text-muted mt-1 text-center";
+        status.textContent = "Vui lòng cấp quyền truy cập vị trí của bạn...";
+        status.classList.remove("d-none");
+
+        navigator.geolocation.getCurrentPosition(
+            async function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                document.getElementById("customerLat").value = lat;
+                document.getElementById("customerLng").value = lng;
+
+                status.className = "small text-success mt-1 text-center fw-bold";
+                status.textContent = `📍 Đã nhận tọa độ: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-geo-alt-fill me-1"></i> Định vị vị trí hiện tại (GPS)`;
+
+                // Gọi API lấy địa chỉ chữ (Reverse Geocoding)
+                await getAddressFromCoordinates(lat, lng);
+                
+                // Tính toán phí ship và thời gian giao dựa trên OSRM
+                await onGpsLocationDetermined(lat, lng);
+            },
+            function(error) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-geo-alt-fill me-1"></i> Định vị vị trí hiện tại (GPS)`;
+                status.className = "small text-danger mt-1 text-center";
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        status.textContent = "Quyền truy cập vị trí bị từ chối. Vui lòng chọn Tỉnh/Thành phố thủ công.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        status.textContent = "Không thể xác định vị trí của bạn.";
+                        break;
+                    case error.TIMEOUT:
+                        status.textContent = "Quá thời gian phản hồi định vị.";
+                        break;
+                    default:
+                        status.textContent = "Đã xảy ra lỗi khi xác định vị trí.";
+                        break;
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+
+    // Hàm gọi Nominatim API để lấy địa chỉ chữ dựa trên kinh vĩ độ
+    async function getAddressFromCoordinates(lat, lng) {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+                headers: {
+                    "User-Agent": "Mi3AE/1.0"
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.display_name) {
+                    // Tách bớt phần địa chỉ dài nếu cần
+                    const addressParts = data.display_name.split(',');
+                    const cleanAddress = addressParts.slice(0, Math.min(5, addressParts.length)).join(',').trim();
+                    
+                    document.getElementById("modalAddressDetail").value = cleanAddress;
+                    
+                    // Hiển thị ô nhập địa chỉ chi tiết để khách hàng kiểm tra lại
+                    const container = document.getElementById("addressEditContainer");
+                    if (container) container.classList.remove("d-none");
+                }
+            }
+        } catch (e) {
+            console.error("Lỗi khi chuyển tọa độ thành địa chỉ:", e);
+        }
+    }
+
+    // Hàm gọi API backend để tính phí ship theo GPS
+    async function onGpsLocationDetermined(lat, lng) {
+        const orderTotal = parseFloat(document.getElementById("subtotalPrice") ? document.getElementById("subtotalPrice").textContent.replace(/[^0-9]/g, "") : "0");
+        
+        try {
+            const response = await fetch(`/api/shipping/calculate-gps?lat=${lat}&lng=${lng}&orderTotal=${orderTotal}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                alert(errorData.message || "Không thể tính phí vận chuyển cho tọa độ này.");
+                
+                // Reset GPS inputs và status
+                document.getElementById("customerLat").value = "";
+                document.getElementById("customerLng").value = "";
+                const gpsStatus = document.getElementById("gpsStatus");
+                if (gpsStatus) {
+                    gpsStatus.className = "small text-danger mt-1 text-center fw-bold";
+                    gpsStatus.textContent = errorData.message || "Không hỗ trợ giao tới khu vực này.";
+                }
+                
+                // Reset phí ship về mặc định hoặc 0
+                updateShippingFee(0, 0);
+                return;
+            }
+            const data = await response.json();
+            
+            if (data.success) {
+                updateShippingFeeGps(data.shippingFee, data.deliveryTimeDisplay, data.distanceKm);
+            }
+        } catch (error) {
+            console.error("Lỗi khi tính toán phí vận chuyển GPS:", error);
+        }
+    }
+
+    // Cập nhật phí vận chuyển và hiển thị khi định vị bằng GPS thành công
+    function updateShippingFeeGps(fee, timeDisplay, distanceKm) {
+        document.getElementById("shippingFeeOriginal").value = fee;
+        document.getElementById("shippingFeeInput").value = fee;
+
+        const displayAddress = document.getElementById("displayAddress");
+        const currentAddrText = displayAddress.textContent.split(" (Dự kiến")[0].split(" (Khoảng cách")[0]; // Làm sạch thông tin cũ
+
+        const feeText = fee > 0 ? formatMoney(fee) : "Miễn phí";
+        displayAddress.innerHTML = `${currentAddrText} <br/><small class="text-success fw-bold"><i class="bi bi-scooter me-1"></i>Khoảng cách: ${distanceKm} km | Giao hàng dự kiến: ${timeDisplay} (${feeText} phí ship)</small>`;
+
+        calculateTotals();
+        updateNotesField();
+    }
+
+    // ----------------------------------------------------
+    // TÌM KIẾM ĐỊA CHỈ THỦ CÔNG (FORWARD GEOCODING)
+    // ----------------------------------------------------
+    async function searchAddress() {
+        const input = document.getElementById("addressSearchInput");
+        const status = document.getElementById("searchAddressStatus");
+        if (!input || !input.value.trim()) return;
+
+        const addressText = input.value.trim();
+        const btn = document.getElementById("btnSearchAddress");
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+        status.textContent = "Đang tìm kiếm tọa độ...";
+        status.className = "small text-muted mt-1";
+        status.classList.remove("d-none");
+
+        try {
+            // Giới hạn tìm kiếm ưu tiên trong khu vực TP.HCM, Việt Nam
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressText + ", Thành phố Hồ Chí Minh, Việt Nam")}&format=json&limit=1&addressdetails=1`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+
+                document.getElementById("customerLat").value = lat;
+                document.getElementById("customerLng").value = lon;
+
+                status.textContent = `📍 Đã tìm thấy: ${data[0].display_name.split(',').slice(0, 3).join(', ')}`;
+                status.className = "small text-success mt-1 fw-bold";
+
+                // Điền luôn địa chỉ vào modalAddressDetail
+                document.getElementById("modalAddressDetail").value = data[0].display_name;
+                const container = document.getElementById("addressEditContainer");
+                if (container) container.classList.remove("d-none");
+
+                // Tính phí ship dựa trên tọa độ vừa tìm được
+                await onGpsLocationDetermined(lat, lon);
+            } else {
+                status.textContent = "Không tìm thấy tọa độ cho địa chỉ này. Vui lòng nhập rõ hơn (VD: 1 Võ Văn Ngân, Thủ Đức).";
+                status.className = "small text-danger mt-1 fw-bold";
+            }
+        } catch (error) {
+            console.error("Lỗi tìm kiếm địa chỉ:", error);
+            status.textContent = "Đã xảy ra lỗi khi kết nối máy chủ bản đồ.";
+            status.className = "small text-danger mt-1";
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-search"></i> Tìm`;
+        }
+    }
+
+    // ----------------------------------------------------
+    // CẬP NHẬT GIÁ TRỊ VÀ HIỂN THỊ PHÍ VẬN CHUYỂN THỦ CÔNG
+    // ----------------------------------------------------
+    function updateShippingFee(fee, days) {
+        document.getElementById("shippingFeeOriginal").value = fee;
+        document.getElementById("shippingFeeInput").value = fee;
+
+        const displayAddress = document.getElementById("displayAddress");
+        const currentAddrText = displayAddress.textContent.split(" (Dự kiến")[0].split(" (Khoảng cách")[0]; // Làm sạch thông tin cũ
+
+        if (fee >= 0 && days > 0) {
+            const feeText = fee > 0 ? formatMoney(fee) : "Miễn phí";
+            
+            // Chuyển số ngày dự kiến sang số phút cho thực tế hơn
+            let timeDisplayText = "20 - 30 phút";
+            if (days === 1) {
+                timeDisplayText = "20 - 30 phút";
+            } else if (days === 2) {
+                timeDisplayText = "35 - 50 phút";
+            } else {
+                timeDisplayText = "1 - 2 giờ";
+            }
+
+            displayAddress.innerHTML = `${currentAddrText} <br/><small class="text-success fw-bold"><i class="bi bi-scooter me-1"></i>Giao hàng dự kiến: ${timeDisplayText} (${feeText} phí ship)</small>`;
+        } else {
+            displayAddress.textContent = currentAddrText;
+        }
+
+        calculateTotals();
+        updateNotesField();
+    }
+
+    // ----------------------------------------------------
+    // VALIDATE VÀ SUBMIT FORM ĐẶT HÀNG
+    // Nếu chọn VietQR → chặn submit, hiện modal QR thanh toán trước
+    // ----------------------------------------------------
+
+    // Cấu hình VietQR từ server (inject qua Razor)
+    const VIETQR_CONFIG = {
+        bankId: "@vietqrBankId",
+        accountNo: "@vietqrAccountNo",
+        accountName: "@vietqrAccountName",
+        template: "@vietqrTemplate"
+    };
+
+    let qrCountdownInterval = null; // Biến lưu interval đồng hồ đếm ngược QR
+
+    function validateCheckoutForm() {
+        const name = document.getElementById("hiddenCustomerName").value.trim();
+        const phone = document.getElementById("hiddenPhone").value.trim();
+        const address = document.getElementById("hiddenAddress").value.trim();
+
+        if (!name || name === "Chưa cung cấp tên nhận hàng" || !phone || phone === "Chưa cung cấp SĐT") {
+            alert("Vui lòng click vào nút 'Cung cấp / Sửa thông tin nhận hàng' để nhập họ tên và số điện thoại trước khi đặt hàng!");
+            
+            // Tự động mở Modal để người dùng điền
+            const deliveryModal = new bootstrap.Modal(document.getElementById('deliveryModal'));
+            deliveryModal.show();
+            return false;
+        }
+
+        // Nếu chọn VietQR → chặn submit form, hiển thị modal QR thanh toán trước
+        const payMethod = document.getElementById("hiddenPaymentMethod").value;
+        if (payMethod === "VietQR") {
+            showVietQRModal();
+            return false; // Chặn submit form
+        }
+
+        return true; // Các phương thức khác → submit bình thường
+    }
+
+    // ----------------------------------------------------
+    // HIỂN THỊ MODAL THANH TOÁN VIETQR
+    // Sinh URL QR động dựa trên tổng tiền hiện tại
+    // ----------------------------------------------------
+    function showVietQRModal() {
+        // Lấy tổng tiền hiện tại từ UI
+        const totalPriceText = document.getElementById("totalPrice").textContent;
+        const totalAmount = parseInt(totalPriceText.replace(/[^\d]/g, "")) || 0;
+
+        // Tạo nội dung chuyển khoản (không dấu để tránh lỗi QR)
+        const transferContent = "Mi 3AE thanh toan don hang";
+
+        // Sinh URL mã QR VietQR động
+        const qrUrl = `https://img.vietqr.io/image/${VIETQR_CONFIG.bankId}-${VIETQR_CONFIG.accountNo}-${VIETQR_CONFIG.template}.png?amount=${totalAmount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(VIETQR_CONFIG.accountName)}`;
+
+        // Cập nhật ảnh QR và thông tin hiển thị trong modal
+        document.getElementById("vietqrPaymentImage").src = qrUrl;
+        document.getElementById("qrAmount").textContent = formatMoney(totalAmount);
+        document.getElementById("qrContent").textContent = transferContent;
+
+        // Bắt đầu đồng hồ đếm ngược 10 phút
+        startQRCountdown(10 * 60);
+
+        // Mở modal thanh toán VietQR
+        const vietqrModal = new bootstrap.Modal(document.getElementById('vietqrPaymentModal'));
+        vietqrModal.show();
+    }
+
+    // ----------------------------------------------------
+    // ĐỒNG HỒ ĐẾM NGƯỢC CHO MODAL QR (10 phút)
+    // Khi hết giờ → tự động đóng modal, thông báo hết hạn
+    // ----------------------------------------------------
+    function startQRCountdown(totalSec) {
+        // Xóa interval cũ nếu có
+        if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+
+        let remaining = totalSec;
+        const countdownSpan = document.getElementById("qrCountdown");
+        const badge = document.getElementById("qrCountdownBadge");
+
+        const updateDisplay = () => {
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            countdownSpan.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            // Đổi màu khi còn dưới 2 phút
+            if (remaining <= 120) {
+                badge.classList.remove("bg-danger");
+                badge.classList.add("bg-warning", "text-dark");
+            }
+        };
+
+        updateDisplay();
+
+        qrCountdownInterval = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(qrCountdownInterval);
+                countdownSpan.textContent = "Hết hạn";
+                // Tự động đóng modal và thông báo
+                cancelVietQRPayment();
+                alert("Phiên thanh toán VietQR đã hết hạn (10 phút). Vui lòng thử lại.");
+                return;
+            }
+            updateDisplay();
+        }, 1000);
+    }
+
+    // ----------------------------------------------------
+    // XÁC NHẬN ĐÃ CHUYỂN KHOẢN VIETQR → SUBMIT FORM TẠO ĐƠN
+    // Đơn hàng sẽ ở trạng thái "PendingPayment" chờ Admin xác nhận nhận tiền
+    // ----------------------------------------------------
+    function confirmVietQRPayment() {
+        // Dừng đồng hồ đếm ngược
+        if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+
+        // Đóng modal VietQR
+        const modalEl = document.getElementById('vietqrPaymentModal');
+        const vietqrModal = bootstrap.Modal.getInstance(modalEl);
+        if (vietqrModal) vietqrModal.hide();
+
+        // Cập nhật ghi chú: đánh dấu đã chuyển khoản VietQR và chờ xác nhận từ quản trị viên
+        const notesEl = document.getElementById("hiddenNotes");
+        if (notesEl) {
+            notesEl.value = notesEl.value.replace(/\[Trạng thái thanh toán:.*?\]/g, "");
+            notesEl.value += " [Trạng thái thanh toán: Đã chuyển khoản qua VietQR - Chờ xác nhận]";
+        }
+
+        // Submit form thực sự để tạo đơn hàng
+        document.getElementById("checkoutForm").submit();
+    }
+
+    // ----------------------------------------------------
+    // HỦY THANH TOÁN VIETQR → ĐÓNG MODAL, KHÔNG TẠO ĐƠN
+    // ----------------------------------------------------
+    function cancelVietQRPayment() {
+        // Dừng đồng hồ đếm ngược
+        if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+
+        // Đóng modal
+        const modalEl = document.getElementById('vietqrPaymentModal');
+        const vietqrModal = bootstrap.Modal.getInstance(modalEl);
+        if (vietqrModal) vietqrModal.hide();
+    }
+
+    // Khởi chạy đồng hồ và tính toán ban đầu
+    document.addEventListener("DOMContentLoaded", async () => {
+        startCountdown();
+        
+        // Nếu đã có sẵn thông tin người dùng được gán, cập nhật UI bên ngoài
+        const currentName = document.getElementById("hiddenCustomerName").value;
+        const currentPhone = document.getElementById("hiddenPhone").value;
+        const currentAddress = document.getElementById("hiddenAddress").value;
+
+        if (currentName) {
+            document.getElementById("displayRecipientName").textContent = currentName;
+        }
+        if (currentPhone) {
+            document.getElementById("displayRecipientPhone").textContent = currentPhone;
+        }
+        
+        if (currentAddress) {
+            document.getElementById("displayAddress").textContent = currentAddress;
+            document.getElementById("modalDisplayAddress").textContent = currentAddress;
+            
+            // Điền địa chỉ chi tiết vào ô nhập trong modal để sẵn sàng chỉnh sửa
+            if (document.getElementById("modalAddressDetail")) {
+                document.getElementById("modalAddressDetail").value = currentAddress;
+            }
+
+            // Tự động phân tích tỉnh thành để chọn dropdown và tính phí ship ngay khi tải trang
+            const addressUpper = currentAddress.toUpperCase();
+            const provinceSelect = document.getElementById("modalProvince");
+            if (provinceSelect) {
+                let matchedValue = "";
+                if (addressUpper.includes("HỒ CHÍ MINH") || addressUpper.includes("HCM") || addressUpper.includes("SÀI GÒN")) {
+                    matchedValue = "HCM";
+                } else if (addressUpper.includes("HÀ NỘI") || addressUpper.includes("HN")) {
+                    matchedValue = "HN";
+                } else if (addressUpper.includes("ĐÀ NẴNG") || addressUpper.includes("DN")) {
+                    matchedValue = "DN";
+                } else if (addressUpper.includes("HẢI PHÒNG") || addressUpper.includes("HP")) {
+                    matchedValue = "HP";
+                } else if (addressUpper.includes("CẦN THƠ") || addressUpper.includes("CT")) {
+                    matchedValue = "CT";
+                } else if (addressUpper.includes("BÌNH DƯƠNG") || addressUpper.includes("BD")) {
+                    matchedValue = "BD";
+                } else if (addressUpper.includes("ĐỒNG NAI") || addressUpper.includes("DNAI")) {
+                    matchedValue = "DNai";
+                } else if (addressUpper.includes("LONG AN") || addressUpper.includes("LA")) {
+                    matchedValue = "LA";
+                } else {
+                    matchedValue = "Khac";
+                }
+
+                provinceSelect.value = matchedValue;
+                // Gọi API tính phí ship & cập nhật UI
+                await onProvinceChange();
+            }
+        }
+
+        calculateTotals();
+    });
+</script>

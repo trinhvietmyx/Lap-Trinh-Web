@@ -1,0 +1,263 @@
+﻿@model GIUA_KY_WEB_3AE.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký tài khoản - Mì 3AE";
+}
+
+<!-- Style tùy biến cho giao diện Đăng ký mô phỏng Modal cao cấp -->
+<style>
+    body {
+        background-color: #f5f5f7;
+    }
+    .register-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 100px !important;
+        margin-bottom: 50px !important;
+    }
+    .modal-simulation-card {
+        width: 100%;
+        max-width: 480px;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        position: relative;
+        overflow: hidden;
+    }
+    .modal-sim-header {
+        padding: 24px 24px 12px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #f1f1f4;
+    }
+    .modal-sim-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #1d1d1f;
+        letter-spacing: -0.5px;
+    }
+    .modal-sim-close {
+        font-size: 1.3rem;
+        color: #86868b;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        line-height: 1;
+        text-decoration: none;
+    }
+    .modal-sim-close:hover {
+        background-color: #f5f5f7;
+        color: #1d1d1f;
+    }
+    .modal-sim-body {
+        padding: 24px;
+    }
+    .phone-reg-link {
+        font-size: 0.88rem;
+        color: #0d6efd;
+        text-decoration: underline;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s;
+        display: inline-block;
+    }
+    .phone-reg-link:hover {
+        color: #0a58ca;
+    }
+    
+    /* Outline Floating Label */
+    .form-floating-outline {
+        position: relative;
+        margin-bottom: 16px;
+    }
+    .form-floating-outline input {
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 0.95rem;
+        border: 1.5px solid #d2d2d7;
+        border-radius: 10px;
+        outline: none;
+        background: #fff;
+        transition: all 0.2s ease;
+        color: #1d1d1f;
+    }
+    .form-floating-outline label {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #fff;
+        padding: 0 6px;
+        color: #86868b;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        pointer-events: none;
+    }
+    .form-floating-outline input:focus,
+    .form-floating-outline input:not(:placeholder-shown) {
+        border-color: #0d6efd;
+    }
+    .form-floating-outline input:focus + label,
+    .form-floating-outline input:not(:placeholder-shown) + label {
+        top: 0;
+        font-size: 0.78rem;
+        color: #0d6efd;
+        font-weight: 600;
+    }
+    
+    /* Form inputs placeholder standard */
+    .custom-form-control {
+        font-size: 0.95rem;
+        padding: 12px 16px;
+        border: 1.5px solid #d2d2d7;
+        border-radius: 10px;
+        outline: none;
+        background: #fff;
+        transition: all 0.2s ease;
+        color: #1d1d1f;
+        width: 100%;
+    }
+    .custom-form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+    
+    /* Password field wrapper */
+    .password-wrapper {
+        position: relative;
+    }
+    .password-toggle-btn {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #86868b;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+    }
+    .password-toggle-btn:hover {
+        color: #1d1d1f;
+    }
+    
+    /* Nút Tạo tài khoản */
+    .btn-create-account {
+        background: linear-gradient(135deg, #0d6efd, #0b58ca);
+        border: none;
+        border-radius: 12px;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 14px 20px;
+        width: 100%;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(13, 110, 253, 0.25);
+    }
+    .btn-create-account:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(13, 110, 253, 0.35);
+        background: linear-gradient(135deg, #0b58ca, #0a4ebd);
+    }
+</style>
+
+<div class="container register-wrapper">
+    <div class="modal-simulation-card">
+        <!-- 1. Tiêu đề Modal -->
+        <div class="modal-sim-header">
+            <span class="modal-sim-title">ĐĂNG KÝ TÀI KHOẢN</span>
+            <a href="/" class="modal-sim-close" aria-label="Đóng">✕</a>
+        </div>
+        
+        <!-- 2. Khối Form nhập liệu -->
+        <div class="modal-sim-body">
+            <form asp-action="Register" method="post" id="registerForm">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <!-- Chuyển đổi phương thức -->
+                <div class="mb-2 text-start">
+                    <span class="phone-reg-link" onclick="alert('Tính năng đăng ký bằng số điện thoại đang được bảo trì. Quý khách vui lòng sử dụng Email.')">
+                        * Đăng ký bằng số điện thoại
+                    </span>
+                </div>
+
+                <!-- Ô 1: Label outline Email -->
+                <div class="form-floating-outline">
+                    <input type="email" asp-for="Email" placeholder=" " required />
+                    <label asp-for="Email">Email</label>
+                    <span asp-validation-for="Email" class="text-danger small d-block mt-1"></span>
+                </div>
+
+                <!-- Ô 2: Placeholder Họ -->
+                <div class="mb-3">
+                    <input type="text" asp-for="LastName" class="custom-form-control" placeholder="Họ" required />
+                    <span asp-validation-for="LastName" class="text-danger small d-block mt-1"></span>
+                </div>
+
+                <!-- Ô 3: Placeholder Tên -->
+                <div class="mb-3">
+                    <input type="text" asp-for="FirstName" class="custom-form-control" placeholder="Tên" required />
+                    <span asp-validation-for="FirstName" class="text-danger small d-block mt-1"></span>
+                </div>
+
+                <!-- Ô 4: Placeholder Mật khẩu -->
+                <div class="mb-3 password-wrapper">
+                    <input type="password" asp-for="Password" id="passwordInput" class="custom-form-control" placeholder="Mật khẩu" required />
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('passwordInput', 'passwordIcon')">
+                        <i class="bi bi-eye" id="passwordIcon"></i>
+                    </button>
+                    <span asp-validation-for="Password" class="text-danger small d-block mt-1"></span>
+                </div>
+
+                <!-- Ô 5: Placeholder nhập lại Mật khẩu -->
+                <div class="mb-4 password-wrapper">
+                    <input type="password" asp-for="ConfirmPassword" id="confirmPasswordInput" class="custom-form-control" placeholder="Nhập lại Mật khẩu" required />
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPasswordInput', 'confirmPasswordIcon')">
+                        <i class="bi bi-eye" id="confirmPasswordIcon"></i>
+                    </button>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small d-block mt-1"></span>
+                </div>
+
+                <!-- 3. Nút hành động -->
+                <button type="submit" class="btn-create-account">
+                    TẠO TÀI KHOẢN
+                </button>
+
+                <div class="text-center mt-3 pt-2">
+                    <span class="text-secondary small">Đã có tài khoản?</span>
+                    <a asp-action="Login" class="text-primary text-decoration-none fw-bold small ms-1">Đăng nhập</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script xử lý ẩn / hiện mật khẩu -->
+<script>
+    function togglePasswordVisibility(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+        }
+    }
+</script>

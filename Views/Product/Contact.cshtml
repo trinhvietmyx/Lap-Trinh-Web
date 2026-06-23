@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "Liên hệ";
+}
+
+<div class="container my-5">
+    <!-- Header trang -->
+    <div class="text-center mb-5 pb-3 border-bottom">
+        <h1 class="display-5 fw-bold text-dark mb-2">Liên Hệ Với Chúng Tôi</h1>
+        <p class="text-muted fs-5">Hãy để lại lời nhắn, Mì 3AE luôn sẵn sàng phục vụ và lắng nghe phản hồi từ bạn</p>
+    </div>
+
+    <div class="row g-5">
+        <!-- Cột trái: Form liên hệ -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <h3 class="fw-bold mb-4 text-dark"><i class="bi bi-chat-left-text-fill text-primary me-2"></i>Gửi phản hồi</h3>
+                
+                <form id="contactForm" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong vòng 24h.'); this.reset();">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="fullName" class="form-label fw-bold text-secondary" style="font-size: 0.9rem;">Họ và Tên</label>
+                            <input type="text" class="form-control rounded-pill border-light-subtle px-3 py-2 bg-light bg-opacity-50" id="fullName" placeholder="Nguyễn Văn A" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="emailAddr" class="form-label fw-bold text-secondary" style="font-size: 0.9rem;">Địa chỉ Email</label>
+                            <input type="email" class="form-control rounded-pill border-light-subtle px-3 py-2 bg-light bg-opacity-50" id="emailAddr" placeholder="name@example.com" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="subjectMsg" class="form-label fw-bold text-secondary" style="font-size: 0.9rem;">Tiêu đề</label>
+                            <input type="text" class="form-control rounded-pill border-light-subtle px-3 py-2 bg-light bg-opacity-50" id="subjectMsg" placeholder="Hỗ trợ đơn hàng / Hợp tác..." required>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="messageContent" class="form-label fw-bold text-secondary" style="font-size: 0.9rem;">Nội dung lời nhắn</label>
+                            <textarea class="form-control border-light-subtle px-3 py-3 bg-light bg-opacity-50" id="messageContent" rows="5" placeholder="Nhập nội dung tin nhắn của bạn tại đây..." style="border-radius: 15px;" required></textarea>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-2.5 text-white shadow-sm fw-bold transition-all hover-btn">
+                                <i class="bi bi-send-fill me-2"></i> Gửi Tin Nhắn
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Cột phải: Thông tin liên hệ & Bản đồ -->
+        <div class="col-lg-5">
+            <div class="d-flex flex-column gap-4">
+                <!-- Thẻ thông tin liên hệ -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <h3 class="fw-bold mb-4 text-dark"><i class="bi bi-info-circle-fill text-primary me-2"></i>Thông tin quán</h3>
+                    
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="info-icon-bg d-flex align-items-center justify-content-center rounded-3 bg-primary bg-opacity-10 text-primary me-3">
+                            <i class="bi bi-geo-alt-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <span class="d-block fw-bold text-dark">Địa chỉ trụ sở</span>
+                            <span class="text-secondary">123 Đường Ba Tháng Hai, Phường 11, Quận 10, Thành phố Hồ Chí Minh, Việt Nam</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="info-icon-bg d-flex align-items-center justify-content-center rounded-3 bg-success bg-opacity-10 text-success me-3">
+                            <i class="bi bi-telephone-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <span class="d-block fw-bold text-dark">Hotline hỗ trợ</span>
+                            <span class="text-secondary">+84 909 3AE 3AE</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start">
+                        <div class="info-icon-bg d-flex align-items-center justify-content-center rounded-3 bg-info bg-opacity-10 text-info me-3">
+                            <i class="bi bi-envelope-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <span class="d-block fw-bold text-dark">Email liên hệ</span>
+                            <span class="text-secondary">lienhe@mi3ae.vn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bản đồ giả lập Premium -->
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white text-center">
+                    <div class="card-body p-0 position-relative" style="height: 250px;">
+                        <!-- Giả lập Google Map bằng một UI vector đẹp thay vì iframe tĩnh -->
+                        <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-white" style="background: linear-gradient(135deg, #D2691E 0%, #8B4513 100%);">
+                            <i class="bi bi-map-fill display-3 mb-2 animate-bounce"></i>
+                            <h5 class="fw-bold mb-1">Mì 3AE Map</h5>
+                            <p class="small opacity-75 mb-0">Quận 10, TP. Hồ Chí Minh</p>
+                            <span class="badge bg-light text-primary rounded-pill mt-3 px-3 py-2 shadow">
+                                <i class="bi bi-geo-alt-fill me-1"></i> Xem trên Google Maps
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .info-icon-bg {
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
+    }
+    .hover-btn {
+        transition: all 0.3s ease;
+    }
+    .hover-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(210, 105, 30, 0.4) !important;
+    }
+    .form-control:focus {
+        border-color: #D2691E !important;
+        box-shadow: 0 0 0 0.25rem rgba(210, 105, 30, 0.1) !important;
+        background-color: #ffffff !important;
+    }
+</style>

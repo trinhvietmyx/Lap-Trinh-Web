@@ -1,0 +1,138 @@
+﻿@model GIUA_KY_WEB_3AE.Models.Product
+
+@{
+    ViewData["Title"] = "Thêm sản phẩm mới";
+}
+
+<div class="container my-5" style="max-width: 900px;">
+    <!-- Nút quay lại -->
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none text-secondary d-inline-flex align-items-center">
+            <i class="bi bi-arrow-left me-2"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- Form Thêm mới -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white p-5">
+        <div class="border-bottom pb-3 mb-4">
+            <h1 class="h3 fw-bold text-dark mb-1">Thêm sản phẩm mới</h1>
+            <p class="text-muted mb-0">Điền thông tin và đăng tải hình ảnh sản phẩm</p>
+        </div>
+
+        <form asp-action="Add" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="row g-4">
+                <!-- Cột thông tin sản phẩm -->
+                <div class="col-md-7">
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-semibold text-dark"></label>
+                        <input asp-for="Name" class="form-control rounded-3" placeholder="Nhập tên sản phẩm..." />
+                        <span asp-validation-for="Name" class="text-danger fs-7"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CategoryId" class="form-label fw-semibold text-dark">Danh mục</label>
+                            <select asp-for="CategoryId" class="form-select rounded-3" asp-items="ViewBag.CategoryList">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger fs-7"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Price" class="form-label fw-semibold text-dark"></label>
+                            <div class="input-group">
+                                <input asp-for="Price" type="number" step="0.01" class="form-control rounded-start-3" placeholder="0.00" />
+                                <span class="input-group-text rounded-end-3">đ</span>
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger fs-7"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold text-dark"></label>
+                        <textarea asp-for="Description" class="form-control rounded-3" rows="5" placeholder="Mô tả đặc điểm nổi bật của sản phẩm..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger fs-7"></span>
+                    </div>
+                </div>
+
+                <!-- Cột upload hình ảnh -->
+                <div class="col-md-5">
+                    <!-- Ảnh chính -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark">Hình ảnh chính</label>
+                        <div class="image-preview-box text-center border border-dashed rounded-4 p-3 bg-light cursor-pointer mb-2 d-flex flex-column align-items-center justify-content-center" style="height: 220px;" onclick="document.getElementById('imageFileInput').click()">
+                            <img id="mainImagePreview" src="/images/default_product.png" alt="Xem trước ảnh chính" class="img-fluid d-none" style="max-height: 100%; object-fit: contain;" />
+                            <div id="previewPlaceholder" class="text-muted d-flex flex-column align-items-center justify-content-center">
+                                <i class="bi bi-cloud-arrow-up display-6 mb-2"></i>
+                                <span class="fs-7">Nhấp để tải ảnh chính</span>
+                            </div>
+                        </div>
+                        <input type="file" name="imageFile" id="imageFileInput" class="d-none" accept="image/*" onchange="previewImage(this, 'mainImagePreview', 'previewPlaceholder')" />
+                    </div>
+
+                    <!-- Ảnh phụ -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">Hình ảnh phụ (Nhiều ảnh)</label>
+                        <input type="file" name="subImageFiles" class="form-control rounded-3" accept="image/*" multiple />
+                        <div class="form-text text-muted fs-7">Chọn nhiều ảnh phụ để tạo album ảnh cho sản phẩm.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Các nút Lưu / Hủy -->
+            <div class="d-flex justify-content-end gap-3 border-top pt-4 mt-4">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Hủy bỏ</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-check-circle me-1"></i> Lưu sản phẩm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Tải các thư viện kiểm tra dữ liệu phía Client để cải thiện trải nghiệm -->
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        // Hàm hiển thị xem trước ảnh chính khi chọn file
+        function previewImage(input, previewId, placeholderId) {
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(placeholderId);
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    placeholder.classList.add('d-none');
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = "";
+                preview.classList.add('d-none');
+                placeholder.classList.remove('d-none');
+            }
+        }
+    </script>
+
+    <style>
+        .image-preview-box {
+            border: 2px dashed #ced4da;
+            transition: all 0.2s ease-in-out;
+        }
+        .image-preview-box:hover {
+            border-color: #0d6efd;
+            background-color: #e9ecef !important;
+        }
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        .fs-7 {
+            font-size: 0.85rem;
+        }
+    </style>
+}

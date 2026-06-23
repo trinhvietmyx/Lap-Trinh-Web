@@ -1,0 +1,12 @@
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.db
+*.db-shm
+*.db-wal
+email_log.txt
+.vscode/
+.vs/

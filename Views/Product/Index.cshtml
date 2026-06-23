@@ -1,0 +1,267 @@
+@model IEnumerable<GIUA_KY_WEB_3AE.Models.Product>
+
+@{
+    ViewData["Title"] = "Thực đơn - Mì 3AE";
+    var categories = ViewBag.Categories as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
+
+<div class="container my-5">
+    <!-- Header của cửa hàng -->
+    <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
+        <div>
+            <h1 class="display-5 fw-bold text-dark mb-1">Thực Đơn Mì 3AE</h1>
+            <p class="text-muted mb-0">Hương vị Mì Quảng truyền thống đậm đà bản sắc quê hương</p>
+        </div>
+        @* Chỉ hiển thị nút thêm món cho quản trị viên (Admin) *@
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-area="Admin" asp-controller="Product" asp-action="Add" class="btn btn-primary btn-lg shadow-sm rounded-pill px-4 text-white">
+                <i class="bi bi-plus-circle-fill me-2"></i> Thêm Món ăn
+            </a>
+        }
+    </div>
+
+    <!-- UI Tìm kiếm được thiết kế lại đẹp mắt, hiện đại và sang trọng hơn -->
+    <div class="search-section mb-5">
+        <form asp-action="Index" method="get" class="search-form-container position-relative">
+            <div class="search-bar-wrapper d-flex align-items-center shadow-sm bg-white rounded-pill p-2 border transition-all">
+                <div class="d-flex align-items-center flex-grow-1 ps-3">
+                    <i class="bi bi-search text-primary fs-5 me-2"></i>
+                    <input type="search"
+                           name="search"
+                           value="@ViewBag.Search"
+                           class="form-control border-0 bg-transparent shadow-none search-input"
+                           placeholder="Tìm món ăn, nước uống, danh mục..." />
+                </div>
+                <div class="d-flex gap-2 pe-1">
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
+                    {
+                        <a asp-action="Index" class="btn btn-light rounded-pill px-3 fw-medium text-secondary d-flex align-items-center">
+                            <i class="bi bi-x-lg me-1"></i> Xóa lọc
+                        </a>
+                    }
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 text-white fw-bold d-flex align-items-center search-btn">
+                        <i class="bi bi-search me-2"></i> Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+        @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
+        {
+            <div class="search-result-info mt-3 ps-2 text-start">
+                <span class="badge bg-light text-dark border rounded-pill py-2 px-3 shadow-sm">
+                    <i class="bi bi-funnel-fill text-primary me-2"></i>Tìm thấy <strong class="text-primary">@ViewBag.ResultCount</strong> món phù hợp với từ khóa <strong class="text-dark">"@ViewBag.Search"</strong>
+                </span>
+            </div>
+        }
+    </div>
+
+    <!-- Layout 2 cột: Trái (Sản phẩm) - Phải (Sidebar) -->
+    <div class="row g-4">
+        <!-- Cột Trái: Danh sách Sản phẩm (chiếm phần lớn trên Desktop) -->
+        <div class="col-lg-9">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 my-5 card shadow-sm border-0 rounded-4 bg-light">
+                    <div class="card-body">
+                        <i class="bi bi-inbox text-secondary display-1"></i>
+                        <h3 class="mt-3 text-secondary">Chưa có món ăn nào</h3>
+                        <p class="text-muted">Nhấn vào nút "Thêm Món ăn mới" ở trên để bắt đầu thêm thực đơn cho quán.</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden product-card transition-all">
+                                <!-- Nhãn Danh mục -->
+                                <div class="position-relative">
+                                    <span class="position-absolute top-0 start-0 m-3 badge bg-dark text-white rounded-pill px-3 py-2 fs-7 shadow-sm">
+                                        @(categories.ContainsKey(item.CategoryId) ? categories[item.CategoryId] : "Danh mục khác")
+                                    </span>
+                                    <a asp-action="Display" asp-route-id="@item.Id">
+                                        <img src="@item.ImageUrl" class="card-img-top img-fluid product-img" alt="@item.Name" style="height: 230px; object-fit: cover;">
+                                    </a>
+                                </div>
+                                
+                                <div class="card-body d-flex flex-column p-4">
+                                    <h3 class="card-title h5 fw-bold text-dark mb-2">
+                                        <a asp-action="Display" asp-route-id="@item.Id" class="text-dark text-decoration-none hover-primary">
+                                            @item.Name
+                                        </a>
+                                    </h3>
+                                    <h4 class="text-primary fw-bold mb-3 fs-5">
+                                        @item.Price.ToString("#,##0") <span class="fs-6 fw-normal text-muted">đ</span>
+                                    </h4>
+                                    <p class="card-text text-secondary text-truncate-3 mb-4 flex-grow-1" style="font-size: 0.9rem; line-height: 1.6;">
+                                        @item.Description
+                                    </p>
+                                    
+                                    <!-- Nút Mua ngay / Chi tiết & Edit/Delete -->
+                                    <div class="mt-auto">
+                                        <div class="d-flex gap-2 mb-3">
+                                            <form asp-controller="Cart" asp-action="Add" method="post" class="js-add-to-cart-form flex-shrink-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center btn-cart-icon" style="width: 42px; height: 42px;" aria-label="Thêm vào giỏ hàng" title="Thêm vào giỏ hàng">
+                                                    <i class="bi bi-cart-plus fs-5"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-controller="Cart" asp-action="BuyNow" method="post" class="d-grid flex-grow-1">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-primary rounded-pill py-2 text-white shadow-sm fw-bold">
+                                                    <i class="bi bi-bag-check me-1"></i> Mua Ngay
+                                                </button>
+                                            </form>
+                                        </div>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <div class="d-flex justify-content-between gap-2 border-top pt-3">
+                                                <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@item.Id" class="btn btn-outline-secondary rounded-pill px-3 flex-fill fs-7">
+                                                    <i class="bi bi-pencil me-1"></i> Sửa
+                                                </a>
+                                                <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger rounded-pill px-3 flex-fill fs-7">
+                                                    <i class="bi bi-trash me-1"></i> Xóa
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Cột Phải: Sidebar MXH (trên Desktop nằm bên phải, trên Mobile sẽ tự động nhảy xuống dưới) -->
+        <div class="col-lg-3">
+            <div class="sticky-top" style="top: 100px; z-index: 10;">
+                <!-- Widget Liên kết Mạng xã hội -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                    <h5 class="text-dark fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-share-fill text-primary me-2"></i>Mạng Xã Hội</h5>
+                    <div class="d-flex flex-column gap-3">
+                        <a href="https://facebook.com" target="_blank" class="social-link d-flex align-items-center p-3 rounded-3 text-decoration-none">
+                            <div class="social-icon-bg facebook-bg me-3 d-flex align-items-center justify-content-center rounded-circle">
+                                <i class="bi bi-facebook fs-5 text-white"></i>
+                            </div>
+                            <div>
+                                <span class="d-block fw-bold text-dark">Facebook</span>
+                                <small class="text-secondary">Theo dõi tin tức</small>
+                            </div>
+                            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                        </a>
+
+                        <a href="https://tiktok.com" target="_blank" class="social-link d-flex align-items-center p-3 rounded-3 text-decoration-none">
+                            <div class="social-icon-bg tiktok-bg me-3 d-flex align-items-center justify-content-center rounded-circle">
+                                <i class="bi bi-tiktok fs-5 text-white"></i>
+                            </div>
+                            <div>
+                                <span class="d-block fw-bold text-dark">TikTok</span>
+                                <small class="text-secondary">Xem video ngắn</small>
+                            </div>
+                            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Widget Hỗ trợ nhanh -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white text-start">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-headset me-2"></i>Đặt Bàn & Giao Hàng</h5>
+                    <p class="small opacity-75 mb-3">Liên hệ hotline của chúng tôi để đặt bàn trước hoặc yêu cầu giao mì Quảng nóng hổi tận nơi.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-telephone-outbound-fill me-2"></i>
+                        <span class="fw-bold">0909 3AE 3AE</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-envelope-check-fill me-2"></i>
+                        <span class="small">lienhe@mi3ae.vn</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        /* CSS cho phần thanh tìm kiếm mới */
+        .search-bar-wrapper {
+            border: 2px solid rgba(210, 105, 30, 0.12) !important;
+            transition: all 0.3s ease;
+        }
+        .search-bar-wrapper:focus-within {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 8px 25px rgba(210, 105, 30, 0.15) !important;
+            transform: translateY(-2px);
+        }
+        .search-input::placeholder {
+            color: #a1887f;
+            opacity: 0.8;
+        }
+        .search-btn {
+            background-color: var(--primary-color) !important;
+            border: none !important;
+            transition: all 0.25s ease;
+        }
+        .search-btn:hover {
+            background-color: var(--primary-hover) !important;
+            transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(210, 105, 30, 0.2);
+        }
+
+        .product-card {
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important;
+        }
+        .product-img {
+            transition: transform 0.5s ease;
+        }
+        .product-card:hover .product-img {
+            transform: scale(1.03);
+        }
+        .text-truncate-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+        .fs-7 {
+            font-size: 0.85rem;
+        }
+
+        /* Styles cho Sidebar Social Links */
+        .social-link {
+            background-color: #f8f9fa;
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: all 0.2s ease-in-out;
+        }
+        .social-link:hover {
+            background-color: #ffffff;
+            border-color: rgba(0,0,0,0.08);
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        .social-icon-bg {
+            width: 40px;
+            height: 40px;
+            transition: transform 0.2s ease;
+        }
+        .social-link:hover .social-icon-bg {
+            transform: rotate(15deg) scale(1.1);
+        }
+        .facebook-bg {
+            background-color: #1877f2;
+        }
+        .tiktok-bg {
+            background-color: #010101;
+        }
+    </style>
+}

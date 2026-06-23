@@ -1,0 +1,115 @@
+@model List<GIUA_KY_WEB_3AE.Models.Order>
+
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng";
+}
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold text-dark mb-4"><i class="bi bi-clock-history text-primary me-2"></i>Lịch Sử Mua Hàng</h1>
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+                    <i class="bi bi-calendar-x text-muted display-1 mb-4"></i>
+                    <h3 class="fw-bold text-dark mb-3">Bạn chưa có đơn hàng nào</h3>
+                    <p class="text-secondary mb-4">Bạn chưa thực hiện bất kỳ giao dịch mua sắm nào. Hãy bắt đầu lựa chọn sản phẩm ngay!</p>
+                    <div>
+                        <a asp-controller="Product" asp-action="Index" class="btn btn-primary rounded-pill px-4 py-2.5 text-white shadow-sm fw-bold">
+                            <i class="bi bi-arrow-left me-1"></i> Khám phá sản phẩm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary small fw-bold">
+                                    <th scope="col" class="border-0 pb-3">Mã đơn hàng</th>
+                                    <th scope="col" class="border-0 pb-3">Ngày đặt</th>
+                                    <th scope="col" class="border-0 pb-3">Người nhận</th>
+                                    <th scope="col" class="border-0 pb-3 text-end">Tổng tiền</th>
+                                    <th scope="col" class="border-0 pb-3 text-center">Trạng thái</th>
+                                    <th scope="col" class="border-0 pb-3 text-center">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model)
+                                {
+                                    <tr>
+                                        <td class="py-3 border-light-subtle fw-bold text-dark">
+                                            #@order.Id
+                                        </td>
+                                        <td class="py-3 border-light-subtle text-secondary small">
+                                            @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                                        </td>
+                                        <td class="py-3 border-light-subtle text-secondary">
+                                            @order.CustomerName
+                                        </td>
+                                        <td class="py-3 border-light-subtle text-end fw-bold text-dark">
+                                            @order.TotalAmount.ToString("#,##0") đ
+                                        </td>
+                                        <td class="py-3 border-light-subtle text-center">
+                                            @* Hiển thị trạng thái đơn hàng đầy đủ cho tất cả các trường hợp *@
+                                            @switch (order.Status)
+                                            {
+                                                case "Pending":
+                                                    <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1.5 small fw-bold">
+                                                        <i class="bi bi-clock-history me-1"></i>Chờ duyệt
+                                                    </span>
+                                                    break;
+                                                case "PendingPayment":
+                                                    <span class="badge bg-info-subtle text-info rounded-pill px-3 py-1.5 small fw-bold">
+                                                        <i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận thanh toán
+                                                    </span>
+                                                    break;
+                                                case "Confirmed":
+                                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 small fw-bold">
+                                                        <i class="bi bi-check-circle me-1"></i>Đã xác nhận
+                                                    </span>
+                                                    break;
+                                                case "Shipped":
+                                                    <span class="badge bg-info-subtle text-info rounded-pill px-3 py-1.5 small fw-bold">
+                                                        <i class="bi bi-truck me-1"></i>Đang giao hàng
+                                                    </span>
+                                                    break;
+                                                case "Completed":
+                                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 small fw-bold">
+                                                        <i class="bi bi-patch-check me-1"></i>Hoàn thành
+                                                    </span>
+                                                    break;
+                                                case "Cancelled":
+                                                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1.5 small fw-bold">
+                                                        <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                                    </span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1.5 small fw-bold">
+                                                        @order.Status
+                                                    </span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td class="py-3 border-light-subtle text-center">
+                                            <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold">
+                                                Chi tiết
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

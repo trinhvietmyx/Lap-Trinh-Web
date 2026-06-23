@@ -1,0 +1,192 @@
+@model GIUA_KY_WEB_3AE.Models.Product
+
+@{
+    ViewData["Title"] = "Chi tiết món ăn - " + Model.Name;
+    var categoryName = ViewBag.CategoryName as string ?? "Không xác định";
+}
+
+<div class="container my-5">
+    <!-- Nút quay lại danh sách -->
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none text-secondary d-inline-flex align-items-center">
+            <i class="bi bi-arrow-left me-2"></i> Quay lại thực đơn
+        </a>
+    </div>
+    <!-- Khối chi tiết sản phẩm -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="row g-0">
+            <!-- Cột hình ảnh (Album) -->
+            <div class="col-md-6 bg-light p-4 d-flex flex-column align-items-center justify-content-center">
+                <!-- Ảnh lớn đang xem -->
+                <div class="main-image-container mb-3 text-center w-100 rounded-4 overflow-hidden bg-white shadow-sm d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <img id="mainDisplayImage" src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                </div>
+
+                <!-- Danh sách ảnh phụ dạng thumbnail -->
+                <div class="d-flex gap-2 overflow-auto w-100 py-2 justify-content-center" id="thumbnailList">
+                    <!-- Thumbnail ảnh chính -->
+                    <div class="thumbnail-item active-thumb rounded-3 overflow-hidden border cursor-pointer bg-white" style="width: 70px; height: 70px; flex-shrink: 0;" onclick="changeMainImage('@Model.ImageUrl', this)">
+                        <img src="@Model.ImageUrl" alt="Ảnh chính" class="w-100 h-100" style="object-fit: cover;">
+                    </div>
+                    
+                    <!-- Thumbnails các ảnh phụ -->
+                    @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+                    {
+                        foreach (var subUrl in Model.ImageUrls)
+                        {
+                            <div class="thumbnail-item rounded-3 overflow-hidden border cursor-pointer bg-white" style="width: 70px; height: 70px; flex-shrink: 0;" onclick="changeMainImage('@subUrl', this)">
+                                <img src="@subUrl" alt="Ảnh phụ" class="w-100 h-100" style="object-fit: cover;">
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Cột thông tin sản phẩm -->
+            <div class="col-md-6 p-5 d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Category badge -->
+                    <span class="badge bg-dark text-white rounded-pill px-3 py-2 mb-3">
+                        @categoryName
+                    </span>
+                    <!-- Tên sản phẩm -->
+                    <h1 class="display-6 fw-bold text-dark mb-3">@Model.Name</h1>
+                    
+                    <!-- Giá sản phẩm -->
+                    <h2 class="text-primary fw-bold mb-4 display-6">
+                        @Model.Price.ToString("#,##0") <span class="fs-4 fw-normal text-muted">đ</span>
+                    </h2>
+
+                    <!-- Form thêm vào giỏ hàng -->
+                    <div class="d-flex gap-3 align-items-center mb-4 flex-wrap">
+                        <div class="input-group rounded-pill overflow-hidden border" style="max-width: 130px; height: 42px;">
+                            <button type="button" class="btn btn-light border-0 px-3" onclick="decrementQty()">-</button>
+                            <input type="number" id="detailQty" class="form-control text-center bg-white border-0 fw-bold" value="1" min="1" readonly style="font-size: 1.05rem;" />
+                            <button type="button" class="btn btn-light border-0 px-3" onclick="incrementQty()">+</button>
+                        </div>
+                        <form asp-controller="Cart" asp-action="Add" method="post" class="js-add-to-cart-form d-inline-flex">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" id="addCartQty" name="quantity" value="1" />
+                            <button type="submit" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold shadow-sm" style="height: 42px;">
+                            <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ hàng
+                        </button>
+                    </form>
+                        <form asp-controller="Cart" asp-action="BuyNow" method="post" class="d-inline-flex">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" id="buyNowQty" name="quantity" value="1" />
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 text-white fw-bold shadow-sm" style="height: 42px;">
+                                <i class="bi bi-bag-check me-2"></i> Mua Ngay
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Mô tả sản phẩm -->
+                    <div class="border-top pt-4">
+                        <h5 class="fw-bold text-secondary mb-3">Mô tả món ăn</h5>
+                        <p class="text-muted" style="line-height: 1.8; font-size: 1.05rem; white-space: pre-line;">
+                            @Model.Description
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Nút hành động -->
+                <div class="border-top pt-4 mt-5 d-flex gap-3 flex-wrap">
+                    <a asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 py-2 fs-6">
+                        <i class="bi bi-arrow-left me-2"></i> Tiếp tục chọn món
+                    </a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary rounded-pill px-4 py-2 fs-6 shadow-sm">
+                            <i class="bi bi-pencil-fill me-2"></i> Chỉnh sửa
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger rounded-pill px-4 py-2 fs-6">
+                            <i class="bi bi-trash-fill me-2"></i> Xóa
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Script xử lý việc nhấp đổi hình ảnh chính -->
+    <script>
+        function changeMainImage(imageUrl, element) {
+            const mainImg = document.getElementById('mainDisplayImage');
+            mainImg.style.opacity = 0;
+            
+            setTimeout(() => {
+                mainImg.src = imageUrl;
+                mainImg.style.opacity = 1;
+            }, 150);
+
+            const thumbnails = document.querySelectorAll('.thumbnail-item');
+            thumbnails.forEach(thumb => {
+                thumb.classList.remove('active-thumb');
+                thumb.style.borderColor = '#dee2e6';
+            });
+            element.classList.add('active-thumb');
+            element.style.borderColor = '#D2691E';
+        }
+
+        /**
+         * Hàm tăng số lượng sản phẩm chi tiết đang chọn thêm 1 đơn vị.
+         */
+        function incrementQty() {
+            const input = document.getElementById('detailQty');
+            let val = parseInt(input.value) || 1;
+            input.value = val + 1;
+            syncDetailQuantity();
+        }
+
+        /**
+         * Hàm giảm số lượng sản phẩm chi tiết đang chọn đi 1 đơn vị (tối thiểu là 1).
+         */
+        function decrementQty() {
+            const input = document.getElementById('detailQty');
+            let val = parseInt(input.value) || 1;
+            if (val > 1) {
+                input.value = val - 1;
+                syncDetailQuantity();
+            }
+        }
+
+        /**
+         * Hàm đồng bộ số lượng sản phẩm từ ô nhập liệu giao diện sang các ô input ẩn của form giỏ hàng và form mua ngay.
+         */
+        function syncDetailQuantity() {
+            const value = document.getElementById('detailQty').value || '1';
+            const addCartQty = document.getElementById('addCartQty');
+            const buyNowQty = document.getElementById('buyNowQty');
+            if (addCartQty) {
+                addCartQty.value = value;
+            }
+            if (buyNowQty) {
+                buyNowQty.value = value;
+            }
+        }
+    </script>
+
+    <style>
+        #mainDisplayImage {
+            transition: opacity 0.15s ease-in-out;
+        }
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        .thumbnail-item {
+            border: 2px solid #dee2e6;
+            transition: border-color 0.2s ease;
+        }
+        .thumbnail-item:hover {
+            border-color: #6c757d;
+        }
+        .active-thumb {
+            border-color: #D2691E !important;
+            box-shadow: 0 0 0 0.2rem rgba(210, 105, 30, 0.25);
+        }
+    </style>
+}

@@ -1,0 +1,86 @@
+@model GIUA_KY_WEB_3AE.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-dark mb-1">Chào mừng quay lại</h2>
+                    <p class="text-muted">Đăng nhập tài khoản Mì 3AE của bạn</p>
+                </div>
+
+                <form asp-action="Login" asp-route-returnUrl="@ViewBag.ReturnUrl" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-bold text-secondary" style="font-size: 0.9rem;">Địa chỉ Email</label>
+                        <input asp-for="Email" class="form-control rounded-pill border-light-subtle px-3 py-2 bg-light bg-opacity-50" placeholder="name@example.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-bold text-secondary" style="font-size: 0.9rem;">Mật khẩu</label>
+                        <input asp-for="Password" class="form-control rounded-pill border-light-subtle px-3 py-2 bg-light bg-opacity-50" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label text-secondary small">Ghi nhớ đăng nhập</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-2.5 text-white shadow-sm fw-bold transition-all hover-btn mb-3">
+                        Đăng Nhập
+                    </button>
+
+                    <div class="divider d-flex align-items-center my-3">
+                        <p class="text-center fw-bold mx-3 mb-0 text-muted w-100" style="font-size: 0.8rem; border-bottom: 1px solid #eee; line-height: 0.1em; margin: 10px 0;"><span style="background:#fff; padding:0 10px;">HOẶC ĐĂNG NHẬP BẰNG</span></p>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <a asp-action="ExternalLogin" asp-route-provider="Google" asp-route-returnUrl="@ViewBag.ReturnUrl" class="btn btn-outline-danger rounded-pill px-3 py-2 d-flex align-items-center gap-2 w-50 justify-content-center fw-semibold text-decoration-none">
+                            <i class="bi bi-google"></i> Google
+                        </a>
+                        <a asp-action="ExternalLogin" asp-route-provider="Facebook" asp-route-returnUrl="@ViewBag.ReturnUrl" class="btn btn-outline-primary rounded-pill px-3 py-2 d-flex align-items-center gap-2 w-50 justify-content-center fw-semibold text-decoration-none">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted small">Chưa có tài khoản?</span>
+                        <a asp-action="Register" class="text-primary text-decoration-none fw-bold small ms-1" style="color: #D2691E !important;">Đăng ký ngay</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-primary {
+        background-color: #D2691E !important;
+        border-color: #D2691E !important;
+    }
+    .btn-primary:hover {
+        background-color: #b85c1a !important;
+        border-color: #b85c1a !important;
+    }
+    .hover-btn {
+        transition: all 0.3s ease;
+    }
+    .hover-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(210, 105, 30, 0.4) !important;
+    }
+    .form-control:focus {
+        border-color: #D2691E !important;
+        box-shadow: 0 0 0 0.25rem rgba(210, 105, 30, 0.15) !important;
+        background-color: #ffffff !important;
+    }
+</style>

@@ -1,0 +1,77 @@
+:root {
+  --primary-color: #D2691E; /* Chocolate / Nâu đất chủ đạo */
+  --primary-hover: #A0522D; /* Sienna / Nâu đỏ đậm khi hover */
+  --secondary-color: #F4A460; /* Vàng nghệ */
+  --accent-color: #FF6347; /* Đỏ ớt / Tomato */
+  --bg-color: #FFF8F0; /* Seashell / Kem nhạt ấm áp */
+  --dark-color: #3E2723; /* Nâu đậm / Dark Brown cho text */
+  --light-color: #FFF5EB; /* Trắng sữa / Light Cream */
+}
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body, h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+body {
+  margin-bottom: 60px;
+  background-color: var(--bg-color) !important;
+  color: var(--dark-color) !important;
+}
+
+/* Custom button primary override */
+.btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background-color: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  color: #ffffff !important;
+}
+
+.btn-outline-primary {
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+.btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.badge.bg-danger {
+  background-color: var(--accent-color) !important;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}

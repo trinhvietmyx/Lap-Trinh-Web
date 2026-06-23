@@ -1,0 +1,169 @@
+- generic [active] [ref=e1]:
+  - banner:
+    - navigation [ref=e2]:
+      - generic [ref=e3]:
+        - link " Mì 3AE" [ref=e4] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e5]: 
+          - text: Mì 3AE
+        - list [ref=e7]:
+          - listitem [ref=e8]:
+            - link " Thực đơn" [ref=e9] [cursor=pointer]:
+              - /url: /Product
+              - generic [ref=e10]: 
+              - text: Thực đơn
+          - listitem [ref=e11]:
+            - link " Liên hệ" [ref=e12] [cursor=pointer]:
+              - /url: /Product/Contact
+              - generic [ref=e13]: 
+              - text: Liên hệ
+          - listitem [ref=e14]:
+            - link " Giỏ hàng" [ref=e15] [cursor=pointer]:
+              - /url: /Cart
+              - generic [ref=e16]: 
+              - generic [ref=e17]: Giỏ hàng
+          - listitem [ref=e18]:
+            - link " Đăng nhập" [ref=e19] [cursor=pointer]:
+              - /url: /Account/Login
+              - generic [ref=e20]: 
+              - text: Đăng nhập
+          - listitem [ref=e21]:
+            - link " Đăng ký" [ref=e22] [cursor=pointer]:
+              - /url: /Account/Register
+              - generic [ref=e23]: 
+              - text: Đăng ký
+  - main [ref=e25]:
+    - generic [ref=e27]:
+      - paragraph [ref=e28]: Mì Quảng gia truyền
+      - heading "Mì 3AE" [level=1] [ref=e29]
+      - paragraph [ref=e30]: Tô mì nóng, nước dùng đậm vị, rau sống giòn và những phần topping được chọn sẵn cho bữa ăn thật đã.
+      - generic [ref=e31]:
+        - link " Xem thực đơn" [ref=e32] [cursor=pointer]:
+          - /url: /Product
+          - generic [ref=e33]: 
+          - text: Xem thực đơn
+        - link " Món nổi bật" [ref=e34] [cursor=pointer]:
+          - /url: /Product/Display/1
+          - generic [ref=e35]: 
+          - text: Món nổi bật
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - paragraph [ref=e40]: Đặc sắc hôm nay
+          - heading "Những món nên thử trước" [level=2] [ref=e41]
+        - link "Xem tất cả " [ref=e42] [cursor=pointer]:
+          - /url: /Product
+          - text: Xem tất cả
+          - generic [ref=e43]: 
+      - generic [ref=e44]:
+        - article [ref=e45]:
+          - link "Mì Quảng Tôm Thịt Đặc Biệt" [ref=e46] [cursor=pointer]:
+            - /url: /Product/Display/1
+            - img "Mì Quảng Tôm Thịt Đặc Biệt" [ref=e47]
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - heading "Mì Quảng Tôm Thịt Đặc Biệt" [level=3] [ref=e50]:
+                - link "Mì Quảng Tôm Thịt Đặc Biệt" [ref=e51] [cursor=pointer]:
+                  - /url: /Product/Display/1
+              - paragraph [ref=e52]: Mì Quảng Tôm Thịt truyền thống với sợi mì dai ngon, tôm đất rim đậm vị, thịt ba chỉ béo ngậy, chan nước lèo ngọt thanh từ xương ống, dùng kèm bánh tráng nướng giòn rụm và rau sống tươi xanh.
+            - generic [ref=e53]:
+              - strong [ref=e54]: 45,000 đ
+              - link "Xem chi tiết Mì Quảng Tôm Thịt Đặc Biệt" [ref=e55] [cursor=pointer]:
+                - /url: /Product/Display/1
+                - generic [ref=e56]: 
+        - article [ref=e57]:
+          - link "Mì Quảng Gà Ta Quê" [ref=e58] [cursor=pointer]:
+            - /url: /Product/Display/2
+            - img "Mì Quảng Gà Ta Quê" [ref=e59]
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - heading "Mì Quảng Gà Ta Quê" [level=3] [ref=e62]:
+                - link "Mì Quảng Gà Ta Quê" [ref=e63] [cursor=pointer]:
+                  - /url: /Product/Display/2
+              - paragraph [ref=e64]: Mì Quảng Gà với thịt gà ta thả vườn săn chắc, thơm ngọt được rim nghệ vàng ươm, nước lèo sánh quyện đậm đà hương vị miền Trung.
+            - generic [ref=e65]:
+              - strong [ref=e66]: 40,000 đ
+              - link "Xem chi tiết Mì Quảng Gà Ta Quê" [ref=e67] [cursor=pointer]:
+                - /url: /Product/Display/2
+                - generic [ref=e68]: 
+        - article [ref=e69]:
+          - link "Mì Quảng Sườn Non Rim" [ref=e70] [cursor=pointer]:
+            - /url: /Product/Display/3
+            - img "Mì Quảng Sườn Non Rim" [ref=e71]
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - heading "Mì Quảng Sườn Non Rim" [level=3] [ref=e74]:
+                - link "Mì Quảng Sườn Non Rim" [ref=e75] [cursor=pointer]:
+                  - /url: /Product/Display/3
+              - paragraph [ref=e76]: Mì Quảng Sườn Non với những cọng sườn heo tuyển chọn, rim mềm thấm vị kết hợp với trứng cút và đậu phộng rang thơm lừng.
+            - generic [ref=e77]:
+              - strong [ref=e78]: 50,000 đ
+              - link "Xem chi tiết Mì Quảng Sườn Non Rim" [ref=e79] [cursor=pointer]:
+                - /url: /Product/Display/3
+                - generic [ref=e80]: 
+        - article [ref=e81]:
+          - link "Mì Quảng Ếch Đồng Nghệ" [ref=e82] [cursor=pointer]:
+            - /url: /Product/Display/4
+            - img "Mì Quảng Ếch Đồng Nghệ" [ref=e83]
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - heading "Mì Quảng Ếch Đồng Nghệ" [level=3] [ref=e86]:
+                - link "Mì Quảng Ếch Đồng Nghệ" [ref=e87] [cursor=pointer]:
+                  - /url: /Product/Display/4
+              - paragraph [ref=e88]: Sự kết hợp độc đáo giữa thịt ếch đồng thơm ngon, xào lăn nghệ vàng đậm đà hương vị đồng quê cùng củ nén khử dầu phộng thơm nức mũi.
+            - generic [ref=e89]:
+              - strong [ref=e90]: 55,000 đ
+              - link "Xem chi tiết Mì Quảng Ếch Đồng Nghệ" [ref=e91] [cursor=pointer]:
+                - /url: /Product/Display/4
+                - generic [ref=e92]: 
+    - generic [ref=e95]:
+      - generic [ref=e96]:
+        - paragraph [ref=e97]: Sẵn sàng gọi món
+        - heading "Vào thực đơn để chọn món bạn thích." [level=2] [ref=e98]
+      - link " Đi tới thực đơn" [ref=e99] [cursor=pointer]:
+        - /url: /Product
+        - generic [ref=e100]: 
+        - text: Đi tới thực đơn
+  - contentinfo [ref=e101]:
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - heading " Mì 3AE" [level=5] [ref=e105]:
+            - generic [ref=e106]: 
+            - text: Mì 3AE
+          - paragraph [ref=e107]: Hệ thống Mì Quảng gia truyền Mì 3AE. Chúng tôi mang đến những tô mì Quảng nóng hổi, chuẩn vị xứ Quảng với dịch vụ chu đáo nhất.
+          - paragraph [ref=e108]:
+            - generic [ref=e109]: 
+            - text: 123 Đường Ba Tháng Hai, Quận 10, TP. HCM
+          - paragraph [ref=e110]:
+            - generic [ref=e111]: 
+            - text: +84 909 3AE 3AE
+        - generic [ref=e112]:
+          - heading "Liên kết nhanh" [level=5] [ref=e113]
+          - list [ref=e114]:
+            - listitem [ref=e115]:
+              - link " Trang chủ" [ref=e116] [cursor=pointer]:
+                - /url: /
+                - generic [ref=e117]: 
+                - text: Trang chủ
+            - listitem [ref=e118]:
+              - link " Thực đơn" [ref=e119] [cursor=pointer]:
+                - /url: /Product
+                - generic [ref=e120]: 
+                - text: Thực đơn
+            - listitem [ref=e121]:
+              - link " Liên hệ" [ref=e122] [cursor=pointer]:
+                - /url: /Product/Contact
+                - generic [ref=e123]: 
+                - text: Liên hệ
+        - generic [ref=e124]:
+          - heading "Nhận khuyến mãi ưu đãi" [level=5] [ref=e125]
+          - paragraph [ref=e126]: Đăng ký nhận thông tin khuyến mãi và các quà tặng ẩm thực mới nhất từ Mì 3AE.
+          - generic [ref=e127]:
+            - textbox "Email" [ref=e128]:
+              - /placeholder: Nhập email của bạn...
+            - button "Đăng ký" [ref=e129] [cursor=pointer]
+      - separator [ref=e130]
+      - paragraph [ref=e132]: © 2026 - Mì 3AE - Hệ Thống Mì Quảng Gia Truyền
+  - generic [ref=e134] [cursor=pointer]: 
+  - text:   
